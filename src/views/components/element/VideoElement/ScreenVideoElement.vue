@@ -1,5 +1,5 @@
 <template>
-  <div class="screen-element-video"
+  <div class="base-element-video screen-element-video"
     :style="{
       top: elementInfo.top + 'px',
       left: elementInfo.left + 'px',
@@ -18,6 +18,7 @@
           :height="elementInfo.height"
           :src="elementInfo.src" 
           :poster="elementInfo.poster"  
+          :autoplay="elementInfo.autoplay"
           :scale="scale" 
         />
       </div>
@@ -26,20 +27,17 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, PropType, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
-import { PPTVideoElement } from '@/types/slides'
+import type { PPTVideoElement } from '@/types/slides'
 import { injectKeySlideId, injectKeySlideScale } from '@/types/injectKey'
 
 import VideoPlayer from './VideoPlayer/index.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTVideoElement>,
-    required: true,
-  },
-})
+defineProps<{
+  elementInfo: PPTVideoElement
+}>()
 
 const { currentSlide } = storeToRefs(useSlidesStore())
 

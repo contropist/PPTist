@@ -1,110 +1,96 @@
 <template>
   <div class="table-style-panel">
-    <InputGroup compact class="row">
+    <SelectGroup class="row">
       <Select
-        style="flex: 3;"
+        style="width: 50%;"
         :value="textAttrs.fontname"
-        @change="value => updateTextAttrs({ fontname: value as string })"
+        search
+        searchLabel="搜索字体"
+        @update:value="value => updateTextAttrs({ fontname: value as string })"
+        :options="FONTS"
       >
-        <template #suffixIcon><IconFontSize /></template>
-        <SelectOptGroup label="系统字体">
-          <SelectOption v-for="font in availableFonts" :key="font.value" :value="font.value">
-            <span :style="{ fontFamily: font.value }">{{font.label}}</span>
-          </SelectOption>
-        </SelectOptGroup>
-        <SelectOptGroup label="在线字体">
-          <SelectOption v-for="font in WEB_FONTS" :key="font.value" :value="font.value">
-            <span>{{font.label}}</span>
-          </SelectOption>
-        </SelectOptGroup>
+        <template #icon>
+          <IconFontSize />
+        </template>
       </Select>
       <Select
-        style="flex: 2;"
+        style="width: 50%;"
         :value="textAttrs.fontsize"
-        @change="value => updateTextAttrs({ fontsize: value as string })"
+        search
+        searchLabel="搜索字号"
+        @update:value="value => updateTextAttrs({ fontsize: value as string })"
+        :options="fontSizeOptions.map(item => ({
+          label: item, value: item
+        }))"
       >
-        <template #suffixIcon><IconAddText /></template>
-        <SelectOption v-for="fontsize in fontSizeOptions" :key="fontsize" :value="fontsize">
-          {{fontsize}}
-        </SelectOption>
+        <template #icon>
+          <IconAddText />
+        </template>
       </Select>
-    </InputGroup>
+    </SelectGroup>
 
-    <ButtonGroup class="row">
-      <Popover trigger="click">
+    <ButtonGroup class="row" passive>
+      <Popover trigger="click" style="width: 50%;">
         <template #content>
           <ColorPicker
             :modelValue="textAttrs.color"
             @update:modelValue="value => updateTextAttrs({ color: value })"
           />
         </template>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="文字颜色">
-          <TextColorButton :color="textAttrs.color" style="flex: 1;">
-            <IconText />
-          </TextColorButton>
-        </Tooltip>
+        <TextColorButton first v-tooltip="'文字颜色'" :color="textAttrs.color">
+          <IconText />
+        </TextColorButton>
       </Popover>
-      <Popover trigger="click">
+      <Popover trigger="click" style="width: 50%;">
         <template #content>
           <ColorPicker
             :modelValue="textAttrs.backcolor"
             @update:modelValue="value => updateTextAttrs({ backcolor: value })"
           />
         </template>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="单元格填充">
-          <TextColorButton :color="textAttrs.backcolor" style="flex: 1;">
-            <IconFill />
-          </TextColorButton>
-        </Tooltip>
+        <TextColorButton last v-tooltip="'单元格填充'" :color="textAttrs.backcolor">
+          <IconFill />
+        </TextColorButton>
       </Popover>
     </ButtonGroup>
 
-    <CheckboxButtonGroup class="row">
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="加粗">
-        <CheckboxButton 
-          style="flex: 1;"
-          :checked="textAttrs.bold"
-          @click="updateTextAttrs({ bold: !textAttrs.bold })"
-        ><IconTextBold /></CheckboxButton>
-      </Tooltip>
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="斜体">
-        <CheckboxButton 
-          style="flex: 1;"
-          :checked="textAttrs.em"
-          @click="updateTextAttrs({ em: !textAttrs.em })"
-        ><IconTextItalic /></CheckboxButton>
-      </Tooltip>
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="下划线">
-        <CheckboxButton 
-          style="flex: 1;"
-          :checked="textAttrs.underline"
-          @click="updateTextAttrs({ underline: !textAttrs.underline })"
-        ><IconTextUnderline /></CheckboxButton>
-      </Tooltip>
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="删除线">
-        <CheckboxButton 
-          style="flex: 1;"
-          :checked="textAttrs.strikethrough"
-          @click="updateTextAttrs({ strikethrough: !textAttrs.strikethrough })"
-        ><IconStrikethrough /></CheckboxButton>
-      </Tooltip>
-    </CheckboxButtonGroup>
+    <ButtonGroup class="row">
+      <CheckboxButton 
+        style="flex: 1;"
+        :checked="textAttrs.bold"
+        v-tooltip="'加粗'"
+        @click="updateTextAttrs({ bold: !textAttrs.bold })"
+      ><IconTextBold /></CheckboxButton>
+      <CheckboxButton 
+        style="flex: 1;"
+        :checked="textAttrs.em"
+        v-tooltip="'斜体'"
+        @click="updateTextAttrs({ em: !textAttrs.em })"
+      ><IconTextItalic /></CheckboxButton>
+      <CheckboxButton 
+        style="flex: 1;"
+        :checked="textAttrs.underline"
+        v-tooltip="'下划线'"
+        @click="updateTextAttrs({ underline: !textAttrs.underline })"
+      ><IconTextUnderline /></CheckboxButton>
+      <CheckboxButton 
+        style="flex: 1;"
+        :checked="textAttrs.strikethrough"
+        v-tooltip="'删除线'"
+        @click="updateTextAttrs({ strikethrough: !textAttrs.strikethrough })"
+      ><IconStrikethrough /></CheckboxButton>
+    </ButtonGroup>
 
     <RadioGroup 
       class="row" 
       button-style="solid" 
       :value="textAttrs.align"
-      @change="e => updateTextAttrs({ align: e.target.value })"
+      @update:value="value => updateTextAttrs({ align: value as TextAlign })"
     >
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="左对齐">
-        <RadioButton value="left" style="flex: 1;"><IconAlignTextLeft /></RadioButton>
-      </Tooltip>
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="居中">
-        <RadioButton value="center" style="flex: 1;"><IconAlignTextCenter /></RadioButton>
-      </Tooltip>
-      <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="右对齐">
-        <RadioButton value="right" style="flex: 1;"><IconAlignTextRight /></RadioButton>
-      </Tooltip>
+      <RadioButton value="left" v-tooltip="'左对齐'" style="flex: 1;"><IconAlignTextLeft /></RadioButton>
+      <RadioButton value="center" v-tooltip="'居中'" style="flex: 1;"><IconAlignTextCenter /></RadioButton>
+      <RadioButton value="right" v-tooltip="'右对齐'" style="flex: 1;"><IconAlignTextRight /></RadioButton>
+      <RadioButton value="justify" v-tooltip="'两端对齐'" style="flex: 1;"><IconAlignTextBoth /></RadioButton>
     </RadioGroup>
 
     <Divider />
@@ -114,16 +100,16 @@
     <Divider />
 
     <div class="row">
-      <div style="flex: 2;">行数：</div>
-      <div class="set-count" style="flex: 3;">
+      <div style="width: 40%;">行数：</div>
+      <div class="set-count" style="width: 60%;">
         <Button class="btn" :disabled="rowCount <= 1" @click="setTableRow(rowCount - 1)"><IconMinus /></Button>
         <div class="count-text">{{rowCount}}</div>
         <Button class="btn" :disabled="rowCount >= 30" @click="setTableRow(rowCount + 1)"><IconPlus /></Button>
       </div>
     </div>
     <div class="row">
-      <div style="flex: 2;">列数：</div>
-      <div class="set-count" style="flex: 3;">
+      <div style="width: 40%;">列数：</div>
+      <div class="set-count" style="width: 60%;">
         <Button class="btn" :disabled="colCount <= 1" @click="setTableCol(colCount - 1)"><IconMinus /></Button>
         <div class="count-text">{{colCount}}</div>
         <Button class="btn" :disabled="colCount >= 30" @click="setTableCol(colCount + 1)"><IconPlus /></Button>
@@ -133,11 +119,11 @@
     <Divider />
 
     <div class="row theme-switch">
-      <div style="flex: 2;">启用主题表格：</div>
-      <div class="switch-wrapper" style="flex: 3;">
+      <div style="width: 40%;">启用主题表格：</div>
+      <div class="switch-wrapper" style="width: 60%;">
         <Switch 
-          :checked="hasTheme" 
-          @change="checked => toggleTheme(checked as boolean)" 
+          :value="hasTheme" 
+          @update:value="value => toggleTheme(value)" 
         />
       </div>
     </div>
@@ -145,38 +131,38 @@
     <template v-if="theme">
       <div class="row">
         <Checkbox 
-          @change="e => updateTheme({ rowHeader: e.target.checked })" 
-          :checked="theme.rowHeader" 
+          @update:value="value => updateTheme({ rowHeader: value })" 
+          :value="theme.rowHeader" 
           style="flex: 1;"
         >标题行</Checkbox>
         <Checkbox 
-          @change="e => updateTheme({ rowFooter: e.target.checked })" 
-          :checked="theme.rowFooter" 
+          @update:value="value => updateTheme({ rowFooter: value })" 
+          :value="theme.rowFooter" 
           style="flex: 1;"
         >汇总行</Checkbox>
       </div>
       <div class="row">
         <Checkbox 
-          @change="e => updateTheme({ colHeader: e.target.checked })" 
-          :checked="theme.colHeader" 
+          @update:value="value => updateTheme({ colHeader: value })" 
+          :value="theme.colHeader" 
           style="flex: 1;"
         >第一列</Checkbox>
         <Checkbox 
-          @change="e => updateTheme({ colFooter: e.target.checked })" 
-          :checked="theme.colFooter" 
+          @update:value="value => updateTheme({ colFooter: value })" 
+          :value="theme.colFooter" 
           style="flex: 1;"
         >最后一列</Checkbox>
       </div>
       <div class="row">
-        <div style="flex: 2;">主题颜色：</div>
-        <Popover trigger="click">
+        <div style="width: 40%;">主题颜色：</div>
+        <Popover trigger="click" style="width: 60%;">
           <template #content>
             <ColorPicker
               :modelValue="theme.color"
               @update:modelValue="value => updateTheme({ color: value })"
             />
           </template>
-          <ColorButton :color="theme.color" style="flex: 3;" />
+          <ColorButton :color="theme.color" />
         </Popover>
       </div>
     </template>
@@ -188,34 +174,28 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTTableElement, TableCell, TableCellStyle, TableTheme } from '@/types/slides'
-import { WEB_FONTS } from '@/configs/font'
+import type { PPTTableElement, TableCell, TableCellStyle, TableTheme, TextAlign } from '@/types/slides'
+import { FONTS } from '@/configs/font'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
 import ElementOutline from '../common/ElementOutline.vue'
-import ColorButton from '../common/ColorButton.vue'
-import TextColorButton from '../common/TextColorButton.vue'
+import ColorButton from '@/components/ColorButton.vue'
+import TextColorButton from '@/components/TextColorButton.vue'
 import CheckboxButton from '@/components/CheckboxButton.vue'
-import CheckboxButtonGroup from '@/components/CheckboxButtonGroup.vue'
 import ColorPicker from '@/components/ColorPicker/index.vue'
-import {
-  Divider,
-  Button,
-  Tooltip,
-  Popover,
-  Select,
-  Switch,
-  Checkbox,
-  Radio,
-  Input,
-} from 'ant-design-vue'
-const { Group: RadioGroup, Button: RadioButton } = Radio
-const { OptGroup: SelectOptGroup, Option: SelectOption } = Select
-const InputGroup = Input.Group
-const ButtonGroup = Button.Group
+import Divider from '@/components/Divider.vue'
+import Switch from '@/components/Switch.vue'
+import Checkbox from '@/components/Checkbox.vue'
+import Button from '@/components/Button.vue'
+import ButtonGroup from '@/components/ButtonGroup.vue'
+import RadioButton from '@/components/RadioButton.vue'
+import RadioGroup from '@/components/RadioGroup.vue'
+import Select from '@/components/Select.vue'
+import SelectGroup from '@/components/SelectGroup.vue'
+import Popover from '@/components/Popover.vue'
 
 const slidesStore = useSlidesStore()
-const { handleElement, handleElementId, selectedTableCells: selectedCells, availableFonts } = storeToRefs(useMainStore())
+const { handleElement, handleElementId, selectedTableCells: selectedCells } = storeToRefs(useMainStore())
 const themeColor = computed(() => slidesStore.theme.themeColor)
 
 const fontSizeOptions = [
@@ -230,7 +210,7 @@ const textAttrs = ref({
   color: '#000',
   backcolor: '',
   fontsize: '12px',
-  fontname: '微软雅黑',
+  fontname: '',
   align: 'left',
 })
 
@@ -278,7 +258,7 @@ const updateTextAttrState = () => {
       color: '#000',
       backcolor: '',
       fontsize: '12px',
-      fontname: '微软雅黑',
+      fontname: '',
       align: 'left',
     }
   }
@@ -291,7 +271,7 @@ const updateTextAttrState = () => {
       color: style.color || '#000',
       backcolor: style.backcolor || '',
       fontsize: style.fontsize || '12px',
-      fontname: style.fontname || '微软雅黑',
+      fontname: style.fontname || '',
       align: style.align || 'left',
     }
   }
@@ -427,7 +407,7 @@ const setTableCol = (value: number) => {
   align-items: center;
 
   .btn {
-    padding: 4px 8px;
+    padding: 0 8px;
   }
 
   .count-text {

@@ -26,21 +26,21 @@
 
     <div class="custom" v-else>
       <div class="row">
-        <div class="label" style="flex: 1;">行数：</div>
-        <InputNumber
+        <div class="label" style="width: 25%;">行数：</div>
+        <NumberInput
           :min="1"
           :max="20"
           v-model:value="customRow"
-          style="flex: 3;"
+          style="width: 75%;"
         />
       </div>
       <div class="row">
-        <div class="label" style="flex: 1;">列数：</div>
-        <InputNumber
+        <div class="label" style="width: 25%;">列数：</div>
+        <NumberInput
           :min="1"
           :max="20"
           v-model:value="customCol"
-          style="flex: 3;"
+          style="width: 75%;"
         />
       </div>
       <div class="btns">
@@ -53,11 +53,9 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import {
-  InputNumber,
-  Button,
-  message,
-} from 'ant-design-vue'
+import message from '@/utils/message'
+import Button from '@/components/Button.vue'
+import NumberInput from '@/components/NumberInput.vue'
 
 interface InsertData {
   row: number
@@ -96,17 +94,19 @@ const close = () => {
 <style lang="scss" scoped>
 .table-generator {
   width: 100%;
-  margin-top: -12px;
+  margin-top: -10px;
 }
 .title {
   height: 28px;
   line-height: 28px;
-  background-color: #ededed;
-  margin: 0 -12px 12px -12px;
+  background-color: $lightGray;
+  margin: 0 -10px 10px -10px;
   padding: 0 14px;
   font-size: 12px;
   display: flex;
   justify-content: space-between;
+  border-top-left-radius: $borderRadius;
+  border-top-right-radius: $borderRadius;
   user-select: none;
 
   .right {

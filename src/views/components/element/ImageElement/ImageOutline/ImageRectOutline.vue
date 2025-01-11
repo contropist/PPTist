@@ -17,38 +17,29 @@
       :height="height"
       :stroke="outlineColor"
       :stroke-width="outlineWidth" 
-      :stroke-dasharray="outlineStyle === 'dashed' ? '10 6' : '0 0'" 
+      :stroke-dasharray="strokeDashArray" 
     ></rect>
 	</svg>
 </template>
 
 <script lang="ts" setup>
-import { PropType, toRef } from 'vue'
-import { PPTElementOutline } from '@/types/slides'
+import { toRef } from 'vue'
+import type { PPTElementOutline } from '@/types/slides'
 import useElementOutline from '@/views/components/element/hooks/useElementOutline'
 
-const props = defineProps({
-  width: {
-    type: Number,
-    required: true,
-  },
-  height: {
-    type: Number,
-    required: true,
-  },
-  outline: {
-    type: Object as PropType<PPTElementOutline>
-  },
-  radius: {
-    type: String,
-    default: '0',
-  },
+const props = withDefaults(defineProps<{
+  width: number
+  height: number
+  outline?: PPTElementOutline
+  radius?: string
+}>(), {
+  radius: '0',
 })
 
 const {
   outlineWidth,
-  outlineStyle,
   outlineColor,
+  strokeDashArray,
 } = useElementOutline(toRef(props, 'outline'))
 </script>
 

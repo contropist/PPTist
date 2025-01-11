@@ -48,19 +48,16 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { PPTLineElement } from '@/types/slides'
+import { computed } from 'vue'
+import type { PPTLineElement } from '@/types/slides'
 import { getLineElementPath } from '@/utils/element'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
 
 import LinePointMarker from './LinePointMarker.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTLineElement>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTLineElement
+}>()
 
 const shadow = computed(() => props.elementInfo.shadow)
 const { shadowStyle } = useElementShadow(shadow)
@@ -74,7 +71,12 @@ const svgHeight = computed(() => {
   return height < 24 ? 24 : height
 })
 
-const lineDashArray = computed(() => props.elementInfo.style === 'dashed' ? '10, 5' : '0, 0')
+const lineDashArray = computed(() => {
+  const size = props.elementInfo.width
+  if (props.elementInfo.style === 'dashed') return size <= 8 ? `${size * 5} ${size * 2.5}` : `${size * 5} ${size * 1.5}`
+  if (props.elementInfo.style === 'dotted') return size <= 8 ? `${size * 1.8} ${size * 1.6}` : `${size * 1.5} ${size * 1.2}`
+  return '0 0'
+})
 
 const path = computed(() => {
   return getLineElementPath(props.elementInfo)

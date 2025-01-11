@@ -10,31 +10,13 @@
 </template>
 
 <script lang="ts" setup>
-defineProps({
-  top: {
-    type: Number,
-    required: true,
-  },
-  left: {
-    type: Number,
-    required: true,
-  },
-  width: {
-    type: Number,
-    required: true,
-  },
-  height: {
-    type: Number,
-    required: true,
-  },
-  quadrant: {
-    type: Number,
-    required: true,
-    validator(value: number) {
-      return [1, 2, 3, 4].includes(value)
-    },
-  },
-})
+defineProps<{
+  top: number
+  left: number
+  width: number
+  height: number
+  quadrant: number
+}>()
 </script>
 
 <style lang="scss" scoped>
@@ -45,11 +27,11 @@ defineProps({
   z-index: 200;
 
   &.quadrant-1 {
-    transform-origin: 0 0;
+    transform-origin: 50% 0;
     transform: rotate(180deg);
   }
   &.quadrant-2 {
-    transform-origin: 50% 0;
+    transform-origin: 0 0;
     transform: rotate(180deg);
   }
   &.quadrant-3 {

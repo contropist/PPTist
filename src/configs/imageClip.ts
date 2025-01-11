@@ -14,7 +14,17 @@ export const enum ClipPaths {
   STAR = 'star',
 }
 
-export const CLIPPATHS = {
+interface ClipPath {
+  [key: string]: {
+    name: string
+    type: ClipPathTypes
+    style: string
+    radius?: string
+    createPath?: (width: number, height: number) => string
+  }
+}
+
+export const CLIPPATHS: ClipPath = {
   rect: {
     name: '矩形',
     type: ClipPathTypes.RECT,
@@ -41,7 +51,7 @@ export const CLIPPATHS = {
     name: '圆角矩形',
     type: ClipPathTypes.RECT,
     radius: '10px',
-    style: 'inset(0 0 0 0 round 10px 10px 10px 10px)',
+    style: 'inset(0 round 10px)',
   },
   ellipse: {
     name: '圆形',

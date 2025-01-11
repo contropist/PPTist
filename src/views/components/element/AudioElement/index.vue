@@ -40,38 +40,29 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTAudioElement } from '@/types/slides'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
-import { VIEWPORT_SIZE } from '@/configs/canvas'
+import type { PPTAudioElement } from '@/types/slides'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 
 import AudioPlayer from './AudioPlayer.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTAudioElement>,
-    required: true,
-  },
-  selectElement: {
-    type: Function as PropType<(e: MouseEvent | TouchEvent, element: PPTAudioElement, canMove?: boolean) => void>,
-    required: true,
-  },
-  contextmenus: {
-    type: Function as PropType<() => ContextmenuItem[] | null>,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTAudioElement
+  selectElement: (e: MouseEvent | TouchEvent, element: PPTAudioElement, canMove?: boolean) => void
+  contextmenus: () => ContextmenuItem[] | null
+}>()
 
 const { canvasScale, handleElementId } = storeToRefs(useMainStore())
-const { viewportRatio } = storeToRefs(useSlidesStore())
+const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
 
 const audioIconSize = computed(() => {
   return Math.min(props.elementInfo.width, props.elementInfo.height) + 'px'
 })
 const audioPlayerPosition = computed(() => {
-  const canvasWidth = VIEWPORT_SIZE
-  const canvasHeight = VIEWPORT_SIZE * viewportRatio.value
+  const canvasWidth = viewportSize.value
+  const canvasHeight = viewportSize.value * viewportRatio.value
 
   const audioWidth = 280 / canvasScale.value
   const audioHeight = 50 / canvasScale.value

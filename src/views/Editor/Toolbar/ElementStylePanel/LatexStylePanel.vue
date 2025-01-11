@@ -1,38 +1,37 @@
 <template>
   <div class="latex-style-panel">
-    <div class="row"><Button style="flex: 1;" @click="latexEditorVisible = true">编辑 LaTeX</Button></div>
+    <div class="row">
+      <Button style="flex: 1;" @click="latexEditorVisible = true">编辑 LaTeX</Button>
+    </div>
 
     <Divider />
 
     <div class="row">
-      <div style="flex: 2;">颜色：</div>
-      <Popover trigger="click">
+      <div style="width: 40%;">颜色：</div>
+      <Popover trigger="click" style="width: 60%;">
         <template #content>
           <ColorPicker
             :modelValue="handleLatexElement.color"
             @update:modelValue="value => updateLatex({ color: value })"
           />
         </template>
-        <ColorButton :color="handleLatexElement.color" style="flex: 3;" />
+        <ColorButton :color="handleLatexElement.color" />
       </Popover>
     </div>
     <div class="row">
-      <div style="flex: 2;">粗细：</div>
-      <InputNumber 
+      <div style="width: 40%;">粗细：</div>
+      <NumberInput 
         :min="1"
         :max="3"
         :value="handleLatexElement.strokeWidth" 
-        @change="value => updateLatex({ strokeWidth: value as number })" 
-        style="flex: 3;" 
+        @update:value="value => updateLatex({ strokeWidth: value })" 
+        style="width: 60%;" 
       />
     </div>
 
     <Modal
       v-model:visible="latexEditorVisible" 
-      :footer="null" 
-      centered
       :width="880"
-      destroyOnClose
     >
       <LaTeXEditor 
         :value="handleLatexElement.latex"
@@ -44,23 +43,21 @@
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, Ref, ref } from 'vue'
+import { onUnmounted, ref, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTLatexElement } from '@/types/slides'
+import type { PPTLatexElement } from '@/types/slides'
 import emitter, { EmitterEvents } from '@/utils/emitter'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
-import ColorButton from '../common/ColorButton.vue'
+import ColorButton from '@/components/ColorButton.vue'
 import LaTeXEditor from '@/components/LaTeXEditor/index.vue'
 import ColorPicker from '@/components/ColorPicker/index.vue'
-import {
-  InputNumber,
-  Divider,
-  Button,
-  Popover,
-  Modal,
-} from 'ant-design-vue'
+import Modal from '@/components/Modal.vue'
+import Divider from '@/components/Divider.vue'
+import Button from '@/components/Button.vue'
+import NumberInput from '@/components/NumberInput.vue'
+import Popover from '@/components/Popover.vue'
 
 const slidesStore = useSlidesStore()
 const { handleElement } = storeToRefs(useMainStore())

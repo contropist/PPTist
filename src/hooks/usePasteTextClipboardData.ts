@@ -1,5 +1,9 @@
+import { storeToRefs } from 'pinia'
+import { useKeyboardStore } from '@/store'
 import { pasteCustomClipboardString } from '@/utils/clipboard'
 import { parseText2Paragraphs } from '@/utils/textParser'
+import { getImageDataURL, isSVGString, svg2File } from '@/utils/image'
+import { isValidURL } from '@/utils/common'
 import useCreateElement from '@/hooks/useCreateElement'
 import useAddSlidesOrElements from '@/hooks/useAddSlidesOrElements'
 
@@ -8,8 +12,22 @@ interface PasteTextClipboardDataOptions {
   onlyElements?: boolean
 }
 
+/**
+ * 判断图片URL字符串
+ * 
+ * ！！！注意，你需要判断允许哪些来源的图片地址被匹配，然后自行编写正则表达式
+ * ！！！必须确保图片来源都是合法、可靠、可控、无访问限制的
+ */
+const isValidImgURL = (url: string) => {
+  const pexels = /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*pexels\.com\/[^\s]+\.(?:jpg|jpeg|png|svg|webp)(?:\?.*)?$/i.test(url)
+  const pptist = /^https?:\/\/(?:[a-zA-Z0-9-]+\.)*pptist\.cn\/[^\s]+\.(?:jpg|jpeg|png|svg|webp)(?:\?.*)?$/i.test(url)
+  return pexels || pptist
+}
+
 export default () => {
-  const { createTextElement } = useCreateElement()
+  const { shiftKeyState } = storeToRefs(useKeyboardStore())
+
+  const { createTextElement, createImageElement } = useCreateElement()
   const { addElementsFromData, addSlidesFromData } = useAddSlidesOrElements()
 
   /**
@@ -46,8 +64,31 @@ export default () => {
 
     // 普通文本
     else if (!onlyElements && !onlySlide) {
-      const string = parseText2Paragraphs(clipboardData)
-      createTextElementFromClipboard(string)
+      // 普通文字
+      if (shiftKeyState.value) {
+        const string = parseText2Paragraphs(clipboardData)
+        createTextElementFromClipboard(string)
+      }
+      else {
+        // 尝试检查是否为图片地址链接
+        if (isValidImgURL(clipboardData)) {
+          createImageElement(clipboardData)
+        }
+        // 尝试检查是否为超链接
+        else if (isValidURL(clipboardData)) {
+          createTextElementFromClipboard(`<a href="${clipboardData}" title="${clipboardData}" target="_blank">${clipboardData}</a>`)
+        }
+        // 尝试检查是否为SVG代码
+        else if (isSVGString(clipboardData)) {
+          const file = svg2File(clipboardData)
+          getImageDataURL(file).then(dataURL => createImageElement(dataURL))
+        }
+        // 普通文字
+        else {
+          const string = parseText2Paragraphs(clipboardData)
+          createTextElementFromClipboard(string)
+        }
+      }
     }
   }
 

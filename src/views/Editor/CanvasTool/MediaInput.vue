@@ -1,14 +1,10 @@
 <template>
   <div class="media-input">
-    <div class="tabs">
-      <div 
-        class="tab" 
-        :class="{ 'active': type === tab.key }" 
-        v-for="tab in tabs" 
-        :key="tab.key"
-        @click="type = tab.key"
-      >{{tab.label}}</div>
-    </div>
+    <Tabs 
+      :tabs="tabs" 
+      v-model:value="type" 
+      :tabsStyle="{ marginBottom: '15px' }" 
+    />
 
     <template v-if="type === 'video'">
       <Input v-model:value="videoSrc" placeholder="请输入视频地址，e.g. https://xxx.mp4"></Input>
@@ -30,11 +26,10 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue'
-import {
-  Button,
-  Input,
-  message,
-} from 'ant-design-vue'
+import message from '@/utils/message'
+import Tabs from '@/components/Tabs.vue'
+import Input from '@/components/Input.vue'
+import Button from '@/components/Button.vue'
 
 type TypeKey = 'video' | 'audio'
 interface TabItem {
@@ -72,22 +67,6 @@ const insertAudio = () => {
 <style lang="scss" scoped>
 .media-input {
   width: 480px;
-}
-.tabs {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  border-bottom: 1px solid $borderColor;
-  margin-bottom: 20px;
-}
-.tab {
-  padding: 0 10px 8px;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-
-  &.active {
-    border-bottom: 2px solid $themeColor;
-  }
 }
 .btns {
   margin-top: 10px;

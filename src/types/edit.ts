@@ -1,6 +1,6 @@
-import { ShapePoolItem } from '@/configs/shapes'
-import { LinePoolItem } from '@/configs/lines'
-import { ImageClipDataRange } from './slides'
+import type { ShapePoolItem } from '@/configs/shapes'
+import type { LinePoolItem } from '@/configs/lines'
+import type { ImageClipDataRange, PPTElementOutline, PPTElementShadow, Gradient } from './slides'
 
 export enum ElementOrderCommands {
   UP = 'up',
@@ -78,6 +78,15 @@ export interface CreateElementSelectionData {
   end: [number, number]
 }
 
+export interface CreateCustomShapeData {
+  start: [number, number]
+  end: [number, number]
+  path: string
+  viewBox: [number, number]
+  fill?: string
+  outline?: PPTElementOutline
+}
+
 export interface CreatingTextElement {
   type: 'text'
   vertical?: boolean
@@ -92,7 +101,10 @@ export interface CreatingLineElement {
 }
 export type CreatingElement = CreatingTextElement | CreatingShapeElement | CreatingLineElement
 
+export type TextFormatPainterKeys = 'bold' | 'em' | 'underline' | 'strikethrough' | 'color' | 'backcolor' | 'fontsize' | 'fontname' | 'align'
+
 export interface TextFormatPainter {
+  keep: boolean
   bold?: boolean
   em?: boolean
   underline?: boolean
@@ -102,4 +114,13 @@ export interface TextFormatPainter {
   fontsize?: string
   fontname?: string
   align?: 'left' | 'right' | 'center'
+}
+
+export interface ShapeFormatPainter {
+  keep: boolean
+  fill?: string
+  gradient?: Gradient
+  outline?: PPTElementOutline
+  opacity?: number
+  shadow?: PPTElementShadow
 }

@@ -38,11 +38,19 @@
 </template>
 
 <script lang="ts" setup>
-import { PropType, computed } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { ElementTypes, PPTElement, PPTLineElement, PPTVideoElement, PPTAudioElement, PPTShapeElement } from '@/types/slides'
-import { OperateLineHandlers, OperateResizeHandlers } from '@/types/edit'
+import {
+  ElementTypes,
+  type PPTElement,
+  type PPTLineElement,
+  type PPTVideoElement,
+  type PPTAudioElement,
+  type PPTShapeElement,
+  type PPTChartElement,
+} from '@/types/slides'
+import type { OperateLineHandlers, OperateResizeHandlers } from '@/types/edit'
 
 import ImageElementOperate from './ImageElementOperate.vue'
 import TextElementOperate from './TextElementOperate.vue'
@@ -52,53 +60,23 @@ import TableElementOperate from './TableElementOperate.vue'
 import CommonElementOperate from './CommonElementOperate.vue'
 import LinkHandler from './LinkHandler.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTElement>,
-    required: true,
-  },
-  isSelected: {
-    type: Boolean,
-    required: true,
-  },
-  isActive: {
-    type: Boolean,
-    required: true,
-  },
-  isActiveGroupElement: {
-    type: Boolean,
-    required: true,
-  },
-  isMultiSelect: {
-    type: Boolean,
-    required: true,
-  },
-  rotateElement: {
-    type: Function as PropType<(element: Exclude<PPTElement, PPTLineElement | PPTVideoElement | PPTAudioElement>) => void>,
-    required: true,
-  },
-  scaleElement: {
-    type: Function as PropType<(e: MouseEvent, element: Exclude<PPTElement, PPTLineElement>, command: OperateResizeHandlers) => void>,
-    required: true,
-  },
-  dragLineElement: {
-    type: Function as PropType<(e: MouseEvent, element: PPTLineElement, command: OperateLineHandlers) => void>,
-    required: true,
-  },
-  moveShapeKeypoint: {
-    type: Function as PropType<(e: MouseEvent, element: PPTShapeElement) => void>,
-    required: true,
-  },
-  openLinkDialog: {
-    type: Function as PropType<() => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTElement
+  isSelected: boolean
+  isActive: boolean
+  isActiveGroupElement: boolean
+  isMultiSelect: boolean
+  rotateElement: (e: MouseEvent, element: Exclude<PPTElement, PPTChartElement | PPTLineElement | PPTVideoElement | PPTAudioElement>) => void
+  scaleElement: (e: MouseEvent, element: Exclude<PPTElement, PPTLineElement>, command: OperateResizeHandlers) => void
+  dragLineElement: (e: MouseEvent, element: PPTLineElement, command: OperateLineHandlers) => void
+  moveShapeKeypoint: (e: MouseEvent, element: PPTShapeElement, index: number) => void
+  openLinkDialog: () => void
+}>()
 
 const { canvasScale, toolbarState } = storeToRefs(useMainStore())
 const { formatedAnimations } = storeToRefs(useSlidesStore())
 
-const currentOperateComponent = computed(() => {
+const currentOperateComponent = computed<unknown>(() => {
   const elementTypeMap = {
     [ElementTypes.IMAGE]: ImageElementOperate,
     [ElementTypes.TEXT]: TextElementOperate,

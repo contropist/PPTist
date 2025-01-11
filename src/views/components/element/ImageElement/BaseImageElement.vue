@@ -37,8 +37,7 @@
           <div class="color-mask"
             v-if="elementInfo.colorMask"
             :style="{
-              backgroundColor: elementInfo.colorMask.color,
-              opacity: elementInfo.colorMask.opacity,
+              backgroundColor: elementInfo.colorMask,
             }"
           ></div>
         </div>
@@ -48,8 +47,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { PPTImageElement } from '@/types/slides'
+import { computed } from 'vue'
+import type { PPTImageElement } from '@/types/slides'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
 import useElementFlip from '@/views/components/element/hooks/useElementFlip'
 import useClipImage from './useClipImage'
@@ -57,12 +56,9 @@ import useFilter from './useFilter'
 
 import ImageOutline from './ImageOutline/index.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTImageElement>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTImageElement
+}>()
 
 const shadow = computed(() => props.elementInfo.shadow)
 const { shadowStyle } = useElementShadow(shadow)
@@ -71,8 +67,8 @@ const flipH = computed(() => props.elementInfo.flipH)
 const flipV = computed(() => props.elementInfo.flipV)
 const { flipStyle } = useElementFlip(flipH, flipV)
 
-const clip = computed(() => props.elementInfo.clip)
-const { clipShape, imgPosition } = useClipImage(clip)
+const imageElement = computed(() => props.elementInfo)
+const { clipShape, imgPosition } = useClipImage(imageElement)
 
 const filters = computed(() => props.elementInfo.filters)
 const { filter } = useFilter(filters)

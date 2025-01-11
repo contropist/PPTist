@@ -31,8 +31,7 @@
             <GradientDefs
               :id="`base-gradient-${elementInfo.id}`" 
               :type="elementInfo.gradient.type"
-              :color1="elementInfo.gradient.color[0]"
-              :color2="elementInfo.gradient.color[1]"
+              :colors="elementInfo.gradient.colors"
               :rotate="elementInfo.gradient.rotate"
             />
           </defs>
@@ -47,7 +46,7 @@
               :fill="elementInfo.gradient ? `url(#base-gradient-${elementInfo.id})` : elementInfo.fill"
               :stroke="outlineColor"
               :stroke-width="outlineWidth" 
-              :stroke-dasharray="outlineStyle === 'dashed' ? '10 5' : '0 0'" 
+              :stroke-dasharray="strokeDashArray" 
             ></path>
           </g>
         </svg>
@@ -61,23 +60,20 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { PPTShapeElement, ShapeText } from '@/types/slides'
+import { computed } from 'vue'
+import type { PPTShapeElement, ShapeText } from '@/types/slides'
 import useElementOutline from '@/views/components/element/hooks/useElementOutline'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
 import useElementFlip from '@/views/components/element/hooks/useElementFlip'
 
 import GradientDefs from './GradientDefs.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTShapeElement>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTShapeElement
+}>()
 
 const outline = computed(() => props.elementInfo.outline)
-const { outlineWidth, outlineStyle, outlineColor } = useElementOutline(outline)
+const { outlineWidth, outlineColor, strokeDashArray } = useElementOutline(outline)
 
 const shadow = computed(() => props.elementInfo.shadow)
 const { shadowStyle } = useElementShadow(shadow)
@@ -89,7 +85,7 @@ const { flipStyle } = useElementFlip(flipH, flipV)
 const text = computed<ShapeText>(() => {
   const defaultText: ShapeText = {
     content: '',
-    defaultFontName: '微软雅黑',
+    defaultFontName: '',
     defaultColor: '#000',
     align: 'middle',
   }
@@ -115,6 +111,7 @@ const text = computed<ShapeText>(() => {
   svg {
     transform-origin: 0 0;
     overflow: visible;
+    display: block;
   }
 }
 .shape-text {

@@ -10,7 +10,7 @@
       visibility: needWaitAnimation ? 'hidden' : 'visible',
     }"
     :title="elementInfo.link?.target || ''"
-    @click="openLink()"
+    @click="$event => openLink($event)"
   >
     <component
       :is="currentElementComponent"
@@ -20,51 +20,36 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
-import { ElementTypes, PPTElement } from '@/types/slides'
+import { ElementTypes, type PPTElement } from '@/types/slides'
 
 import BaseImageElement from '@/views/components/element/ImageElement/BaseImageElement.vue'
 import BaseTextElement from '@/views/components/element/TextElement/BaseTextElement.vue'
 import BaseShapeElement from '@/views/components/element/ShapeElement/BaseShapeElement.vue'
 import BaseLineElement from '@/views/components/element/LineElement/BaseLineElement.vue'
-import ScreenChartElement from '@/views/components/element/ChartElement/ScreenChartElement.vue'
+import BaseChartElement from '@/views/components/element/ChartElement/BaseChartElement.vue'
 import BaseTableElement from '@/views/components/element/TableElement/BaseTableElement.vue'
 import BaseLatexElement from '@/views/components/element/LatexElement/BaseLatexElement.vue'
 import ScreenVideoElement from '@/views/components/element/VideoElement/ScreenVideoElement.vue'
 import ScreenAudioElement from '@/views/components/element/AudioElement/ScreenAudioElement.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTElement>,
-    required: true,
-  },
-  elementIndex: {
-    type: Number,
-    required: true,
-  },
-  animationIndex: {
-    type: Number,
-    required: true,
-  },
-  turnSlideToId: {
-    type: Function as PropType<(id: string) => void>,
-    required: true,
-  },
-  manualExitFullscreen: {
-    type: Function as PropType<() => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTElement
+  elementIndex: number
+  animationIndex: number
+  turnSlideToId: (id: string) => void
+  manualExitFullscreen: () => void
+}>()
 
-const currentElementComponent = computed(() => {
+const currentElementComponent = computed<unknown>(() => {
   const elementTypeMap = {
     [ElementTypes.IMAGE]: BaseImageElement,
     [ElementTypes.TEXT]: BaseTextElement,
     [ElementTypes.SHAPE]: BaseShapeElement,
     [ElementTypes.LINE]: BaseLineElement,
-    [ElementTypes.CHART]: ScreenChartElement,
+    [ElementTypes.CHART]: BaseChartElement,
     [ElementTypes.TABLE]: BaseTableElement,
     [ElementTypes.LATEX]: BaseLatexElement,
     [ElementTypes.VIDEO]: ScreenVideoElement,
@@ -98,7 +83,12 @@ const needWaitAnimation = computed(() => {
 })
 
 // 打开元素绑定的超链接
-const openLink = () => {
+const openLink = (e: MouseEvent) => {
+  if ((e.target as HTMLElement).tagName === 'A') {
+    props.manualExitFullscreen()
+    return
+  }
+
   const link = props.elementInfo.link
   if (!link) return
 

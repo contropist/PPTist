@@ -42,35 +42,23 @@
     >
       <div class="content">
         <div class="tool-btn page-number" @click="slideThumbnailModelVisible = true">幻灯片 {{slideIndex + 1}} / {{slides.length}}</div>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" title="画笔工具">
-          <IconWrite class="tool-btn" @click="writingBoardToolVisible = true" />
-        </Tooltip>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" title="激光笔">
-          <IconMagic class="tool-btn" :class="{ 'active': laserPen }" @click="laserPen = !laserPen" />
-        </Tooltip>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" title="计时器">
-          <IconStopwatchStart class="tool-btn" :class="{ 'active': timerlVisible }" @click="timerlVisible = !timerlVisible" />
-        </Tooltip>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" title="演讲者视图">
-          <IconListView class="tool-btn" @click="changeViewMode('presenter')" />
-        </Tooltip>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" :title="fullscreenState ? '退出全屏' : '进入全屏'">
-          <IconOffScreenOne class="tool-btn" v-if="fullscreenState" @click="manualExitFullscreen()" />
-          <IconFullScreenOne class="tool-btn" v-else @click="enterFullscreen()" />
-        </Tooltip>
-        <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.3" title="结束放映">
-          <IconPower class="tool-btn" @click="exitScreening()" />
-        </Tooltip>
+        <IconWrite class="tool-btn" v-tooltip="'画笔工具'" @click="writingBoardToolVisible = true" />
+        <IconMagic class="tool-btn" v-tooltip="'激光笔'" :class="{ 'active': laserPen }" @click="laserPen = !laserPen" />
+        <IconStopwatchStart class="tool-btn" v-tooltip="'计时器'" :class="{ 'active': timerlVisible }" @click="timerlVisible = !timerlVisible" />
+        <IconListView class="tool-btn" v-tooltip="'演讲者视图'" @click="changeViewMode('presenter')" />
+        <IconOffScreenOne class="tool-btn" v-tooltip="'退出全屏'" v-if="fullscreenState" @click="manualExitFullscreen()" />
+        <IconFullScreenOne class="tool-btn" v-tooltip="'进入全屏'" v-else @click="enterFullscreen()" />
+        <IconPower class="tool-btn" v-tooltip="'结束放映'" @click="exitScreening()" />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { PropType, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import { enterFullscreen } from '@/utils/fullscreen'
 import useScreening from '@/hooks/useScreening'
 import useExecPlay from './hooks/useExecPlay'
@@ -81,14 +69,10 @@ import ScreenSlideList from './ScreenSlideList.vue'
 import SlideThumbnails from './SlideThumbnails.vue'
 import WritingBoardTool from './WritingBoardTool.vue'
 import CountdownTimer from './CountdownTimer.vue'
-import { Tooltip } from 'ant-design-vue'
 
-const props = defineProps({
-  changeViewMode: {
-    type: Function as PropType<(mode: 'base' | 'presenter') => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  changeViewMode: (mode: 'base' | 'presenter') => void
+}>()
 
 const { slides, slideIndex } = storeToRefs(useSlidesStore())
 
@@ -96,6 +80,10 @@ const {
   autoPlayTimer,
   autoPlay,
   closeAutoPlay,
+  autoPlayInterval,
+  setAutoPlayInterval,
+  loopPlay,
+  setLoopPlay,
   mousewheelListener,
   touchStartListener,
   touchEndListener,
@@ -144,6 +132,38 @@ const contextmenus = (): ContextmenuItem[] => {
     },
     { divider: true },
     {
+      text: autoPlayTimer.value ? '取消自动放映' : '自动放映',
+      handler: autoPlayTimer.value ? closeAutoPlay : autoPlay,
+      children: [
+        {
+          text: '2.5秒',
+          subText: autoPlayInterval.value === 2500 ? '√' : '',
+          handler: () => setAutoPlayInterval(2500),
+        },
+        {
+          text: '5秒',
+          subText: autoPlayInterval.value === 5000 ? '√' : '',
+          handler: () => setAutoPlayInterval(5000),
+        },
+        {
+          text: '7.5秒',
+          subText: autoPlayInterval.value === 7500 ? '√' : '',
+          handler: () => setAutoPlayInterval(7500),
+        },
+        {
+          text: '10秒',
+          subText: autoPlayInterval.value === 10000 ? '√' : '',
+          handler: () => setAutoPlayInterval(10000),
+        },
+      ],
+    },
+    {
+      text: '循环放映',
+      subText: loopPlay.value ? '√' : '',
+      handler: () => setLoopPlay(!loopPlay.value),
+    },
+    { divider: true },
+    {
       text: '显示工具栏',
       handler: () => rightToolsVisible.value = true,
     },
@@ -160,10 +180,6 @@ const contextmenus = (): ContextmenuItem[] => {
       handler: () => props.changeViewMode('presenter'),
     },
     { divider: true },
-    {
-      text: autoPlayTimer.value ? '取消自动放映' : '自动放映',
-      handler: autoPlayTimer.value ? closeAutoPlay : autoPlay,
-    },
     {
       text: '结束放映',
       subText: 'ESC',
@@ -235,7 +251,7 @@ const contextmenus = (): ContextmenuItem[] => {
     background-color: #fff;
     color: $textColor;
     padding: 8px 10px;
-    box-shadow: 0 2px 12px 0 rgb(56 56 56 / 20%);
+    box-shadow: 0 2px 12px 0 rgb(56, 56, 56, .2);
     border: 1px solid #e2e6ed;
   }
 

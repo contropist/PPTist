@@ -1,18 +1,18 @@
 <template>
   <div class="element-toolbar">
-    <div class="tabs">
-      <div 
-        class="tab" 
-        :class="{ 'active': activeTab === item.key }" 
-        v-for="item in tabs" 
-        :key="item.key"
-        @click="activeTab = item.key"
-      >{{item.label}}</div>
-    </div>
+    <Tabs 
+      :tabs="tabs" 
+      v-model:value="activeTab" 
+      :tabsStyle="{ marginBottom: '8px' }" 
+      :tabStyle="{
+        width: '30%',
+        margin: '0 10%',
+      }" 
+    />
 
     <div class="content">
       <div class="style" v-if="activeTab === 'style'">
-        <CheckboxButtonGroup class="row">
+        <ButtonGroup class="row">
           <CheckboxButton 
             style="flex: 1;"
             :checked="richTextAttrs.bold"
@@ -33,33 +33,33 @@
             :checked="richTextAttrs.strikethrough"
             @click="emitRichTextCommand('strikethrough')"
           ><IconStrikethrough /></CheckboxButton>
-        </CheckboxButtonGroup>
+        </ButtonGroup>
 
         <ButtonGroup class="row">
           <Button 
-            style="flex: 2;"
+            style="flex: 1;"
             @click="emitRichTextCommand('fontsize-add')"
           ><IconFontSize />+</Button>
           <Button 
-            style="flex: 2;"
+            style="flex: 1;"
             @click="emitRichTextCommand('fontsize-reduce')"
           ><IconFontSize />-</Button>
         </ButtonGroup>
         
-        <Divider style="margin: 20px 0;" />
+        <Divider :margin="20" />
 
         <RadioGroup 
           class="row" 
           button-style="solid" 
           :value="richTextAttrs.align"
-          @change="e => emitRichTextCommand('align', e.target.value)"
+          @update:value="value => emitRichTextCommand('align', value)"
         >
           <RadioButton value="left" style="flex: 1;"><IconAlignTextLeft /></RadioButton>
           <RadioButton value="center" style="flex: 1;"><IconAlignTextCenter /></RadioButton>
           <RadioButton value="right" style="flex: 1;"><IconAlignTextRight /></RadioButton>
         </RadioGroup>
         
-        <Divider style="margin: 20px 0;" />
+        <Divider :margin="20" />
 
         <div class="row-block">
           <div class="label">文字颜色：</div>
@@ -93,7 +93,7 @@
           <Button style="flex: 1;" @click="deleteElement()"><IconDelete class="icon" /> 删除</Button>
         </ButtonGroup>
         
-        <Divider style="margin: 20px 0;" />
+        <Divider :margin="20" />
 
         <ButtonGroup class="row">
           <Button style="flex: 1;" @click="orderElement(handleElement!, ElementOrderCommands.TOP)"><IconSendToBack class="icon" /> 置顶</Button>
@@ -102,7 +102,7 @@
           <Button style="flex: 1;" @click="orderElement(handleElement!, ElementOrderCommands.DOWN)"><IconSentToBack class="icon" /> 下移</Button>
         </ButtonGroup>
         
-        <Divider style="margin: 20px 0;" />
+        <Divider :margin="20" />
 
         <ButtonGroup class="row">
           <Button style="flex: 1;" @click="alignElementToCanvas(ElementAlignCommands.LEFT)"><IconAlignLeft class="icon" /> 左对齐</Button>
@@ -123,7 +123,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTElement, TableCell } from '@/types/slides'
+import type { PPTElement, TableCell } from '@/types/slides'
 import { ElementAlignCommands, ElementOrderCommands } from '@/types/edit'
 import emitter, { EmitterEvents } from '@/utils/emitter'
 import useOrderElement from '@/hooks/useOrderElement'
@@ -133,14 +133,12 @@ import useAddSlidesOrElements from '@/hooks/useAddSlidesOrElements'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
 import CheckboxButton from '@/components/CheckboxButton.vue'
-import CheckboxButtonGroup from '@/components/CheckboxButtonGroup.vue'
-import {
-  Divider,
-  Button,
-  Radio,
-} from 'ant-design-vue'
-const { Group: RadioGroup, Button: RadioButton } = Radio
-const ButtonGroup = Button.Group
+import Tabs from '@/components/Tabs.vue'
+import Divider from '@/components/Divider.vue'
+import Button from '@/components/Button.vue'
+import ButtonGroup from '@/components/ButtonGroup.vue'
+import RadioButton from '@/components/RadioButton.vue'
+import RadioGroup from '@/components/RadioGroup.vue'
 
 interface TabItem {
   key: 'style' | 'common'
@@ -236,27 +234,6 @@ const updateFill = (color: string) => {
   display: flex;
   flex-direction: column;
   animation: slideInUp .15s;
-}
-.tabs {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  border-bottom: 1px solid $borderColor;
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-.tab {
-  width: 30%;
-  padding: 10px 10px 12px;
-  margin: 0 10%;
-  border-bottom: 2px solid transparent;
-  text-align: center;
-  cursor: pointer;
-
-  &.active {
-    border-bottom: 2px solid $themeColor;
-  }
 }
 
 @keyframes slideInUp {

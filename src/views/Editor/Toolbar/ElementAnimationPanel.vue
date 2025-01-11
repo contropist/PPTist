@@ -3,18 +3,18 @@
     <div class="element-animation" v-if="handleElement">
       <Popover 
         trigger="click" 
-        v-model:visible="animationPoolVisible" 
-        @visibleChange="visible => handlePopoverVisibleChange(visible)"
+        v-model:value="animationPoolVisible" 
+        @update:value="visible => handlePopoverVisibleChange(visible)"
+        style="width: 100%;"
       >
         <template #content>
-          <div class="tabs">
-            <div 
-              :class="['tab', tab.key, { 'active': activeTab === tab.key }]"
-              v-for="tab in tabs" 
-              :key="tab.key"
-              @click="activeTab = tab.key"
-            >{{tab.label}}</div>
-          </div>
+          <Tabs 
+            :tabs="tabs" 
+            v-model:value="activeTab" 
+            :tabsStyle="{ marginBottom: '20px' }" 
+            :tabStyle="{ width: '33.333%' }" 
+            spaceAround
+          />
           <template v-for="key in animationTypes">
             <div :class="['animation-pool', key]" :key="key" v-if="activeTab === key">
               <div class="pool-type" :key="effect.name" v-for="effect in animations[key]">
@@ -55,12 +55,12 @@
     <Draggable 
       class="animation-sequence"
       :modelValue="animationSequence"
-      :animation="300"
+      :animation="200"
       :scroll="true"
       :scrollSensitivity="50"
       handle=".sequence-content"
-      @end="handleDragEnd"
       itemKey="id"
+      @end="handleDragEnd"
     >
       <template #item="{ element }">
         <div class="sequence-item" :class="[element.type, { 'active': handleElement?.id === element.elId }]">
@@ -68,48 +68,52 @@
             <div class="index">{{element.index}}</div>
             <div class="text">【{{element.elType}}】{{element.animationEffect}}</div>
             <div class="handler">
-              <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="预览">
-                <IconPlayOne class="handler-btn" @click="runAnimation(element.elId, element.effect, element.duration)" />
-              </Tooltip>
-              <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="删除">
-                <IconCloseSmall class="handler-btn" @click="deleteAnimation(element.id)" />
-              </Tooltip>
+              <IconPlayOne class="handler-btn" v-tooltip="'预览'" @click="runAnimation(element.elId, element.effect, element.duration)" />
+              <IconCloseSmall class="handler-btn" v-tooltip="'删除'" @click="deleteAnimation(element.id)" />
             </div>
           </div>
 
           <div class="configs" v-if="handleElementAnimation[0]?.elId === element.elId">
-            <Divider style="margin: 16px 0;" />
+            <Divider :margin="16" />
 
             <div class="config-item">
-              <div style="flex: 3;">持续时长：</div>
-              <InputNumber 
+              <div style="width: 35%;">持续时长：</div>
+              <NumberInput 
                 :min="500"
                 :max="3000"
                 :step="500"
                 :value="element.duration" 
-                @change="value => updateElementAnimationDuration(element.id, value as number)" 
-                style="flex: 5;" 
+                @update:value="value => updateElementAnimationDuration(element.id, value)" 
+                style="width: 65%;" 
               />
             </div>
             <div class="config-item">
-              <div style="flex: 3;">触发方式：</div>
+              <div style="width: 35%;">触发方式：</div>
               <Select
                 :value="element.trigger"
-                @change="value => updateElementAnimationTrigger(element.id, value as 'click' | 'meantime' | 'auto')"
-                style="flex: 5;"
-              >
-                <SelectOption value="click">主动触发</SelectOption>
-                <SelectOption value="meantime">与上一动画同时</SelectOption>
-                <SelectOption value="auto">上一动画之后</SelectOption>
-              </Select>
+                @update:value="value => updateElementAnimationTrigger(element.id, value as AnimationTrigger)"
+                style="width: 65%;"
+                :options="[
+                  { label: '主动触发', value: 'click' },
+                  { label: '与上一动画同时', value: 'meantime' },
+                  { label: '上一动画之后', value: 'auto' },
+                ]"
+              />
             </div>
             <div class="config-item">
-              <Button style="flex: 1;" @click="openAnimationPool(element.id)">更换动画</Button>
+              <Button style="width: 100%;" @click="openAnimationPool(element.id)">更换动画</Button>
             </div>
           </div>
         </div>
       </template>
     </Draggable>
+
+    <template v-if="animationSequence.length >= 2">
+      <Divider />
+      <Button @click="runAllAnimation()">
+        {{ animateIn ? '停止预览' : '预览全部'}}
+      </Button>
+    </template>
   </div>
 </template>
 
@@ -118,7 +122,7 @@ import { computed, ref, watch } from 'vue'
 import { nanoid } from 'nanoid'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTAnimation } from '@/types/slides'
+import type { AnimationTrigger, AnimationType, PPTAnimation } from '@/types/slides'
 import { 
   ENTER_ANIMATIONS,
   EXIT_ANIMATIONS,
@@ -130,16 +134,13 @@ import {
 import { ELEMENT_TYPE_ZH } from '@/configs/element'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
+import Tabs from '@/components/Tabs.vue'
+import Divider from '@/components/Divider.vue'
+import Button from '@/components/Button.vue'
 import Draggable from 'vuedraggable'
-import {
-  InputNumber,
-  Divider,
-  Button,
-  Tooltip,
-  Popover,
-  Select,
-} from 'ant-design-vue'
-const SelectOption = Select.Option
+import NumberInput from '@/components/NumberInput.vue'
+import Select from '@/components/Select.vue'
+import Popover from '@/components/Popover.vue'
 
 const animationEffects: { [key: string]: string } = {}
 for (const effect of ENTER_ANIMATIONS) {
@@ -158,10 +159,10 @@ for (const effect of ATTENTION_ANIMATIONS) {
   }
 }
 
-type AnimationType = 'in' | 'out' | 'attention'
 interface TabItem {
   key: AnimationType
   label: string
+  color: string,
 }
 
 const animationTypes: AnimationType[] = ['in', 'out', 'attention']
@@ -171,12 +172,12 @@ const { handleElement, handleElementId } = storeToRefs(useMainStore())
 const { currentSlide, formatedAnimations, currentSlideAnimations } = storeToRefs(slidesStore)
 
 const tabs: TabItem[] = [
-  { key: 'in', label: '入场' },
-  { key: 'out', label: '退场' },
-  { key: 'attention', label: '强调' },
+  { key: 'in', label: '入场', color: '#68a490' },
+  { key: 'out', label: '退场', color: '#d86344' },
+  { key: 'attention', label: '强调', color: '#e8b76a' },
 ]
 const activeTab = ref('in')
-
+const animateIn = ref(false)
 watch(() => handleElementId.value, () => {
   animationPoolVisible.value = false
 })
@@ -226,7 +227,7 @@ const deleteAnimation = (id: string) => {
 // 拖拽修改动画顺序后同步数据
 const handleDragEnd = (eventData: { newIndex: number; oldIndex: number }) => {
   const { newIndex, oldIndex } = eventData
-  if (oldIndex === newIndex) return
+  if (newIndex === undefined || oldIndex === undefined || newIndex === oldIndex) return
 
   const animations: PPTAnimation[] = JSON.parse(JSON.stringify(currentSlideAnimations.value))
   const animation = animations[oldIndex]
@@ -253,6 +254,18 @@ const runAnimation = (elId: string, effect: string, duration: number) => {
   }
 }
 
+// 执行所有动画预览
+const runAllAnimation = async () => {
+  animateIn.value = !animateIn.value
+  for (let i = 0; i < animationSequence.value.length; i++) {
+    if (!animateIn.value) break
+    const item = animationSequence.value[i]
+    if (item.index !== 1 && item.trigger !== 'meantime') await new Promise(resolve => setTimeout(resolve, item.duration + 100)) 
+    runAnimation(item.elId, item.effect, item.duration)
+    if (i >= animationSequence.value.length - 1) animateIn.value = false
+  }
+}
+
 // 修改元素动画持续时间
 const updateElementAnimationDuration = (id: string, duration: number) => {
   if (duration < 100 || duration > 5000) return
@@ -266,7 +279,7 @@ const updateElementAnimationDuration = (id: string, duration: number) => {
 }
 
 // 修改触发方式
-const updateElementAnimationTrigger = (id: string, trigger: 'click' | 'meantime' | 'auto') => {
+const updateElementAnimationTrigger = (id: string, trigger: AnimationTrigger) => {
   const animations = currentSlideAnimations.value.map(item => {
     if (item.id === id) return { ...item, trigger }
     return item
@@ -288,7 +301,9 @@ const updateElementAnimation = (type: AnimationType, effect: string) => {
   const animationItem = currentSlideAnimations.value.find(item => item.elId === handleElementId.value)
   const duration = animationItem?.duration || ANIMATION_DEFAULT_DURATION
 
-  runAnimation(handleElementId.value, effect, duration)
+  setTimeout(() => {
+    runAnimation(handleElementId.value, effect, duration)
+  }, 0)
 }
 
 const handleAnimationId = ref('')
@@ -312,7 +327,9 @@ const addAnimation = (type: AnimationType, effect: string) => {
   animationPoolVisible.value = false
   addHistorySnapshot()
 
-  runAnimation(handleElementId.value, effect, ANIMATION_DEFAULT_DURATION)
+  setTimeout(() => {
+    runAnimation(handleElementId.value, effect, ANIMATION_DEFAULT_DURATION)
+  }, 0)
 }
 
 // 动画选择面板打开600ms后再移除遮罩层，否则打开面板后迅速滑入鼠标预览会导致抖动
@@ -347,33 +364,6 @@ $attentionColor: #e8b76a;
   display: flex;
   flex-direction: column;
 }
-.tabs {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  border-bottom: 1px solid $borderColor;
-  margin-bottom: 20px;
-}
-.tab {
-  width: 33.33%;
-  padding-bottom: 8px;
-  border-bottom: 2px solid transparent;
-  text-align: center;
-  cursor: pointer;
-
-  &.active {
-    border-bottom: 2px solid $themeColor;
-  }
-  &.in.active {
-    border-bottom-color: $inColor;
-  }
-  &.out.active {
-    border-bottom-color: $outColor;
-  }
-  &.attention.active {
-    border-bottom-color: $attentionColor;
-  }
-}
 .element-animation {
   height: 32px;
   display: flex;
@@ -403,7 +393,8 @@ $attentionColor: #e8b76a;
   overflow-y: auto;
   overflow-x: hidden;
   font-size: 12px;
-  margin-right: -12px;
+  margin-right: -10px;
+  padding-right: 5px;
   position: relative;
 
   .mask {
@@ -423,13 +414,16 @@ $attentionColor: #e8b76a;
     background-color: rgba($color: $attentionColor, $alpha: .15);
   }
 }
+.pool-type:not(:last-child) {
+  margin-bottom: 5px;
+}
 .type-title {
   width: 100%;
   font-size: 13px;
   margin-bottom: 10px;
   border-left: 4px solid #aaa;
   background-color: #eee;
-  padding: 2px 0 2px 10px;
+  padding: 4px 0 4px 10px;
 }
 .pool-item-wrapper {
   @include flex-grid-layout();
@@ -437,7 +431,7 @@ $attentionColor: #e8b76a;
 .pool-item {
   @include flex-grid-layout-children(4, 24%);
 
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   height: 40px;
   line-height: 40px;
   text-align: center;
@@ -445,6 +439,7 @@ $attentionColor: #e8b76a;
 }
 .animation-box {
   background-color: $lightGray;
+  border-radius: $borderRadius;
 }
 
 .animation-sequence {
@@ -456,7 +451,7 @@ $attentionColor: #e8b76a;
 }
 .sequence-item {
   border: 1px solid $borderColor;
-  padding: 10px 6px;
+  padding: 8px;
   border-radius: $borderRadius;
   margin-bottom: 8px;
   transition: all .5s;

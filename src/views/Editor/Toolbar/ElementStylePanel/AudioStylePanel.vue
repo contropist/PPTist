@@ -1,34 +1,34 @@
 <template>
   <div class="audio-style-panel">
     <div class="row">
-      <div style="flex: 2;">图标颜色：</div>
-      <Popover trigger="click">
+      <div style="width: 40%;">图标颜色：</div>
+      <Popover trigger="click" style="width: 60%;">
         <template #content>
           <ColorPicker
             :modelValue="handleAudioElement.color"
             @update:modelValue="value => updateAudio({ color: value })"
           />
         </template>
-        <ColorButton :color="handleAudioElement.color" style="flex: 3;" />
+        <ColorButton :color="handleAudioElement.color" />
       </Popover>
     </div>
 
     <div class="row switch-row">
-      <div style="flex: 2;">自动播放：</div>
-      <div class="switch-wrapper" style="flex: 3;">
+      <div style="width: 40%;">自动播放：</div>
+      <div class="switch-wrapper" style="width: 60%;">
         <Switch 
-          :checked="handleAudioElement.autoplay" 
-          @change="checked => updateAudio({ autoplay: checked as boolean })" 
+          :value="handleAudioElement.autoplay" 
+          @update:value="value => updateAudio({ autoplay: value })" 
         />
       </div>
     </div>
 
     <div class="row switch-row">
-      <div style="flex: 2;">循环播放：</div>
-      <div class="switch-wrapper" style="flex: 3;">
+      <div style="width: 40%;">循环播放：</div>
+      <div class="switch-wrapper" style="width: 60%;">
         <Switch 
-          :checked="handleAudioElement.loop" 
-          @change="checked => updateAudio({ loop: checked as boolean })" 
+          :value="handleAudioElement.loop" 
+          @update:value="value => updateAudio({ loop: value })" 
         />
       </div>
     </div>
@@ -36,15 +36,16 @@
 </template>
 
 <script lang="ts" setup>
-import { Ref } from 'vue'
+import type { Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTAudioElement } from '@/types/slides'
+import type { PPTAudioElement } from '@/types/slides'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
-import ColorButton from '../common/ColorButton.vue'
+import ColorButton from '@/components/ColorButton.vue'
 import ColorPicker from '@/components/ColorPicker/index.vue'
-import { Popover, Switch } from 'ant-design-vue'
+import Switch from '@/components/Switch.vue'
+import Popover from '@/components/Popover.vue'
 
 const slidesStore = useSlidesStore()
 const { handleElement } = storeToRefs(useMainStore())

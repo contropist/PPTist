@@ -11,28 +11,18 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTElement, PPTElementLink } from '@/types/slides'
+import type { PPTElement, PPTElementLink } from '@/types/slides'
 import useLink from '@/hooks/useLink'
+import Divider from '@/components/Divider.vue'
 
-import { Divider } from 'ant-design-vue'
-
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTElement>,
-    required: true,
-  },
-  link: {
-    type: Object as PropType<PPTElementLink>,
-    required: true,
-  },
-  openLinkDialog: {
-    type: Function as PropType<() => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTElement
+  link: PPTElementLink
+  openLinkDialog: () => void
+}>()
 
 const mainStore = useMainStore()
 const slidesStore = useSlidesStore()

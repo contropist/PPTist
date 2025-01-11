@@ -1,7 +1,11 @@
-import { Directive, createVNode, render, DirectiveBinding } from 'vue'
+import { type Directive, type DirectiveBinding, createVNode, render } from 'vue'
 import ContextmenuComponent from '@/components/Contextmenu/index.vue'
 
 const CTX_CONTEXTMENU_HANDLER = 'CTX_CONTEXTMENU_HANDLER'
+
+interface CustomHTMLElement extends HTMLElement {
+  [CTX_CONTEXTMENU_HANDLER]?: (event: MouseEvent) => void
+} 
 
 const contextmenuListener = (el: HTMLElement, event: MouseEvent, binding: DirectiveBinding) => {
   event.stopPropagation()
@@ -44,12 +48,12 @@ const contextmenuListener = (el: HTMLElement, event: MouseEvent, binding: Direct
 }
 
 const ContextmenuDirective: Directive = {
-  mounted(el: HTMLElement, binding) {
+  mounted(el: CustomHTMLElement, binding) {
     el[CTX_CONTEXTMENU_HANDLER] = (event: MouseEvent) => contextmenuListener(el, event, binding)
     el.addEventListener('contextmenu', el[CTX_CONTEXTMENU_HANDLER])
   },
 
-  unmounted(el: HTMLElement) {
+  unmounted(el: CustomHTMLElement) {
     if (el && el[CTX_CONTEXTMENU_HANDLER]) {
       el.removeEventListener('contextmenu', el[CTX_CONTEXTMENU_HANDLER])
       delete el[CTX_CONTEXTMENU_HANDLER]

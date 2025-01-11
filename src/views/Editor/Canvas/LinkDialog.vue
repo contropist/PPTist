@@ -1,14 +1,10 @@
 <template>
   <div class="link-dialog">
-    <div class="tabs">
-      <div 
-        class="tab" 
-        :class="{ 'active': type === tab.key }" 
-        v-for="tab in tabs" 
-        :key="tab.key"
-        @click="type = tab.key"
-      >{{tab.label}}</div>
-    </div>
+    <Tabs 
+      :tabs="tabs" 
+      v-model:value="type"
+      :tabsStyle="{ marginBottom: '20px' }" 
+    />
 
     <Input 
       class="input"
@@ -21,18 +17,12 @@
       class="input"
       v-if="type === 'slide'"
       v-model:value="slideId"
-    >
-      <SelectOption 
-        v-for="(slide, index) in slides" 
-        :key="slide.id" 
-        :value="slide.id" 
-        :disabled="currentSlide.id === slide.id"
-      >幻灯片 {{index + 1}}</SelectOption>
-    </Select>
+      :options="slideOptions"
+    />
 
     <div class="preview" v-if="type === 'slide' && selectedSlide">
       <div>预览：</div>
-      <ThumbnailSlide class="thumbnail" :slide="selectedSlide" :size="490" />
+      <ThumbnailSlide class="thumbnail" :slide="selectedSlide" :size="500" />
     </div>
 
     <div class="btns">
@@ -46,20 +36,17 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTElementLink } from '@/types/slides'
+import type { ElementLinkType, PPTElementLink } from '@/types/slides'
 import useLink from '@/hooks/useLink'
 
 import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
-import {
-  Button,
-  Select,
-  Input,
-} from 'ant-design-vue'
-const SelectOption = Select.Option
+import Tabs from '@/components/Tabs.vue'
+import Input from '@/components/Input.vue'
+import Button from '@/components/Button.vue'
+import Select from '@/components/Select.vue'
 
-type TypeKey = 'web' | 'slide'
 interface TabItem {
-  key: TypeKey
+  key: ElementLinkType
   label: string
 }
 
@@ -70,9 +57,17 @@ const emit = defineEmits<{
 const { handleElement } = storeToRefs(useMainStore())
 const { slides, currentSlide } = storeToRefs(useSlidesStore())
 
-const type = ref<TypeKey>('web')
+const type = ref<ElementLinkType>('web')
 const address = ref('')
 const slideId = ref('')
+
+const slideOptions = computed(() => {
+  return slides.value.map((item, index) => ({
+    label: `幻灯片 ${index + 1}`,
+    value: item.id,
+    disabled: currentSlide.value.id === item.id,
+  }))
+})
 
 slideId.value = slides.value.find(item => item.id !== currentSlide.value.id)?.id || ''
 
@@ -112,21 +107,9 @@ const save = () => {
 </script>
 
 <style lang="scss" scoped>
-.tabs {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  border-bottom: 1px solid $borderColor;
-  margin-bottom: 20px;
-}
-.tab {
-  padding: 0 10px 8px;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-
-  &.active {
-    border-bottom: 2px solid $themeColor;
-  }
+.link-dialog {
+  font-size: 13px;
+  line-height: 1.675;
 }
 .input {
   width: 100%;
@@ -136,8 +119,9 @@ const save = () => {
   margin-top: 12px;
 }
 .thumbnail {
-  outline: 1px solid rgba($color: $themeColor, $alpha: .15);
+  border: 1px solid rgba($color: $themeColor, $alpha: .15);
   margin-top: 5px;
+  border-radius: $borderRadius;
 }
 .btns {
   margin-top: 20px;

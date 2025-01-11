@@ -74,25 +74,16 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue'
-import { message } from 'ant-design-vue'
+import message from '@/utils/message'
 
-const props = defineProps({
-  src: {
-    type: String,
-    required: true,
-  },
-  loop: {
-    type: Boolean,
-    required: true,
-  },
-  autoplay: {
-    type: Boolean,
-    default: false,
-  },
-  scale: {
-    type: Number,
-    default: 1,
-  },
+const props = withDefaults(defineProps<{
+  src: string
+  loop: boolean
+  autoplay?: boolean
+  scale?: number
+}>(), {
+  autoplay: false,
+  scale: 1,
 })
 
 const secondToTime = (second = 0) => {
@@ -410,7 +401,7 @@ defineExpose({
       }
 
       .icon-content {
-        transition: all 0.2s ease-in-out;
+        transition: all .2s ease-in-out;
         opacity: 0.8;
         color: #fff;
       }

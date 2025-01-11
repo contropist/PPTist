@@ -3,13 +3,12 @@
     <Draggable 
       class="thumbnail-list"
       :modelValue="slides"
-      :animation="300"
+      :animation="200"
       :scroll="true"
       :scrollSensitivity="50"
-      :setData="null"
-      itemKey="id"
       :delayOnTouchOnly="true"
       :delay="800"
+      itemKey="id"
       @end="handleDragEnd"
     >
       <template #item="{ element, index }">
@@ -48,6 +47,7 @@ const changeSlideIndex = (index: number) => {
 // 拖拽调整顺序后进行数据的同步
 const handleDragEnd = (eventData: { newIndex: number; oldIndex: number }) => {
   const { newIndex, oldIndex } = eventData
+  if (newIndex === undefined || oldIndex === undefined || newIndex === oldIndex) return
   sortSlides(newIndex, oldIndex)
 }
 </script>

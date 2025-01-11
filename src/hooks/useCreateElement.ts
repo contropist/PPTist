@@ -2,11 +2,10 @@ import { storeToRefs } from 'pinia'
 import { nanoid } from 'nanoid'
 import { useMainStore, useSlidesStore } from '@/store'
 import { getImageSize } from '@/utils/image'
-import { VIEWPORT_SIZE } from '@/configs/canvas'
-import { PPTLineElement, PPTElement, TableCell, TableCellStyle, PPTShapeElement, PPTChartElement, ChartOptions, PresetChartType } from '@/types/slides'
-import { ShapePoolItem, SHAPE_PATH_FORMULAS } from '@/configs/shapes'
-import { LinePoolItem } from '@/configs/lines'
-import { CHART_TYPES } from '@/configs/chartTypes'
+import type { PPTLineElement, PPTElement, TableCell, TableCellStyle, PPTShapeElement, ChartType } from '@/types/slides'
+import { type ShapePoolItem, SHAPE_PATH_FORMULAS } from '@/configs/shapes'
+import type { LinePoolItem } from '@/configs/lines'
+import { CHART_DEFAULT_DATA } from '@/configs/chart'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
 interface CommonElementPosition {
@@ -23,11 +22,16 @@ interface LineElementPosition {
   end: [number, number]
 }
 
+interface CreateTextData {
+  content?: string
+  vertical?: boolean
+}
+
 export default () => {
   const mainStore = useMainStore()
   const slidesStore = useSlidesStore()
   const { creatingElement } = storeToRefs(mainStore)
-  const { theme, viewportRatio } = storeToRefs(slidesStore)
+  const { theme, viewportRatio, viewportSize } = storeToRefs(slidesStore)
 
   const { addHistorySnapshot } = useHistorySnapshot()
 
@@ -55,12 +59,12 @@ export default () => {
     getImageSize(src).then(({ width, height }) => {
       const scale = height / width
   
-      if (scale < viewportRatio.value && width > VIEWPORT_SIZE) {
-        width = VIEWPORT_SIZE
+      if (scale < viewportRatio.value && width > viewportSize.value) {
+        width = viewportSize.value
         height = width * scale
       }
-      else if (height > VIEWPORT_SIZE * viewportRatio.value) {
-        height = VIEWPORT_SIZE * viewportRatio.value
+      else if (height > viewportSize.value * viewportRatio.value) {
+        height = viewportSize.value * viewportRatio.value
         width = height / scale
       }
 
@@ -70,8 +74,8 @@ export default () => {
         src,
         width,
         height,
-        left: (VIEWPORT_SIZE - width) / 2,
-        top: (VIEWPORT_SIZE * viewportRatio.value - height) / 2,
+        left: (viewportSize.value - width) / 2,
+        top: (viewportSize.value * viewportRatio.value - height) / 2,
         fixedRatio: true,
         rotate: 0,
       })
@@ -82,36 +86,19 @@ export default () => {
    * 创建图表元素
    * @param chartType 图表类型
    */
-  const createChartElement = (type: PresetChartType) => {
-    const newElement: PPTChartElement = {
+  const createChartElement = (type: ChartType) => {
+    createElement({
       type: 'chart',
       id: nanoid(10),
-      chartType: CHART_TYPES[type],
+      chartType: type,
       left: 300,
       top: 81.25,
       width: 400,
       height: 400,
       rotate: 0,
-      themeColor: [theme.value.themeColor],
-      gridColor: theme.value.fontColor,
-      data: {
-        labels: ['类别1', '类别2', '类别3', '类别4', '类别5'],
-        legends: ['系列1'],
-        series: [
-          [12, 19, 5, 2, 18],
-        ],
-      },
-    }
-
-    let options: ChartOptions = {}
-    if (type === 'horizontalBar') options = { horizontalBars: true }
-    else if (type === 'area') options = { showArea: true }
-    else if (type === 'scatter') options = { showLine: false }
-    else if (type === 'ring') options = { donut: true }
-
-    createElement({
-      ...newElement,
-      options,
+      themeColors: [theme.value.themeColor],
+      textColor: theme.value.fontColor,
+      data: CHART_DEFAULT_DATA[type],
     })
   }
   
@@ -150,8 +137,8 @@ export default () => {
       colWidths,
       rotate: 0,
       data,
-      left: (VIEWPORT_SIZE - width) / 2,
-      top: (VIEWPORT_SIZE * viewportRatio.value - height) / 2,
+      left: (viewportSize.value - width) / 2,
+      top: (viewportSize.value * viewportRatio.value - height) / 2,
       outline: {
         width: 2,
         style: 'solid',
@@ -173,11 +160,6 @@ export default () => {
    * @param position 位置大小信息
    * @param content 文本内容
    */
-  
-  interface CreateTextData {
-    content?: string
-    vertical?: boolean
-  }
   const createTextElement = (position: CommonElementPosition, data?: CreateTextData) => {
     const { left, top, width, height } = position
     const content = data?.content || ''
@@ -209,7 +191,7 @@ export default () => {
    * @param position 位置大小信息
    * @param data 形状路径信息
    */
-  const createShapeElement = (position: CommonElementPosition, data: ShapePoolItem) => {
+  const createShapeElement = (position: CommonElementPosition, data: ShapePoolItem, supplement: Partial<PPTShapeElement> = {}) => {
     const { left, top, width, height } = position
     const newElement: PPTShapeElement = {
       type: 'shape',
@@ -223,16 +205,18 @@ export default () => {
       fill: theme.value.themeColor,
       fixedRatio: false,
       rotate: 0,
+      ...supplement,
     }
+    if (data.withborder) newElement.outline = theme.value.outline
     if (data.special) newElement.special = true
     if (data.pathFormula) {
       newElement.pathFormula = data.pathFormula
       newElement.viewBox = [width, height]
 
       const pathFormula = SHAPE_PATH_FORMULAS[data.pathFormula]
-      if ('editable' in pathFormula) {
-        newElement.path = pathFormula.formula(width, height, pathFormula.defaultValue)
-        newElement.keypoint = pathFormula.defaultValue
+      if ('editable' in pathFormula && pathFormula.editable) {
+        newElement.path = pathFormula.formula(width, height, pathFormula.defaultValue!)
+        newElement.keypoints = pathFormula.defaultValue
       }
       else newElement.path = pathFormula.formula(width, height)
     }
@@ -260,6 +244,7 @@ export default () => {
       width: 2,
     }
     if (data.isBroken) newElement.broken = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+    if (data.isBroken2) newElement.broken2 = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
     if (data.isCurve) newElement.curve = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
     if (data.isCubic) newElement.cubic = [[(start[0] + end[0]) / 2, (start[1] + end[1]) / 2], [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]]
     createElement(newElement)
@@ -276,8 +261,8 @@ export default () => {
       width: data.w,
       height: data.h,
       rotate: 0,
-      left: (VIEWPORT_SIZE - data.w) / 2,
-      top: (VIEWPORT_SIZE * viewportRatio.value - data.h) / 2,
+      left: (viewportSize.value - data.w) / 2,
+      top: (viewportSize.value * viewportRatio.value - data.h) / 2,
       path: data.path,
       latex: data.latex,
       color: theme.value.fontColor,
@@ -298,9 +283,10 @@ export default () => {
       width: 500,
       height: 300,
       rotate: 0,
-      left: (VIEWPORT_SIZE - 500) / 2,
-      top: (VIEWPORT_SIZE * viewportRatio.value - 300) / 2,
+      left: (viewportSize.value - 500) / 2,
+      top: (viewportSize.value * viewportRatio.value - 300) / 2,
       src,
+      autoplay: false,
     })
   }
   
@@ -315,8 +301,8 @@ export default () => {
       width: 50,
       height: 50,
       rotate: 0,
-      left: (VIEWPORT_SIZE - 50) / 2,
-      top: (VIEWPORT_SIZE * viewportRatio.value - 50) / 2,
+      left: (viewportSize.value - 50) / 2,
+      top: (viewportSize.value * viewportRatio.value - 50) / 2,
       loop: false,
       autoplay: false,
       fixedRatio: true,

@@ -27,8 +27,8 @@
           class="config-item"
           v-model:value="rangeType"
         >
-          <RadioButton style="width: 50%;" value="all">全部幻灯片</RadioButton>
-          <RadioButton style="width: 50%;" value="current">当前幻灯片</RadioButton>
+          <RadioButton style="width: 50%;" value="all">全部</RadioButton>
+          <RadioButton style="width: 50%;" value="current">当前页</RadioButton>
         </RadioGroup>
       </div>
       <div class="row">
@@ -36,20 +36,21 @@
         <Select 
           class="config-item"
           v-model:value="count"
-        >
-          <SelectOption :value="1">1</SelectOption>
-          <SelectOption :value="2">2</SelectOption>
-          <SelectOption :value="3">3</SelectOption>
-        </Select>
+          :options="[
+            { label: '1', value: 1 },
+            { label: '2', value: 2 },
+            { label: '3', value: 3 },
+          ]"
+        />
       </div>
       <div class="row">
         <div class="title">边缘留白：</div>
         <div class="config-item">
-          <Switch v-model:checked="padding" />
+          <Switch v-model:value="padding" />
         </div>
       </div>
       <div class="tip">
-        注意：若打印预览与实际样式不一致，请在弹出的打印窗口中勾选【背景图形】选项。
+        提示：若打印预览与实际样式不一致，请在弹出的打印窗口中勾选【背景图形】选项。
       </div>
     </div>
 
@@ -67,14 +68,11 @@ import { useSlidesStore } from '@/store'
 import { print } from '@/utils/print'
 
 import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
-import {
-  Button,
-  Select,
-  Switch,
-  Radio,
-} from 'ant-design-vue'
-const { Group: RadioGroup, Button: RadioButton } = Radio
-const SelectOption = Select.Option
+import Switch from '@/components/Switch.vue'
+import Button from '@/components/Button.vue'
+import RadioButton from '@/components/RadioButton.vue'
+import RadioGroup from '@/components/RadioGroup.vue'
+import Select from '@/components/Select.vue'
 
 const emit = defineEmits<{
   (event: 'close'): void
@@ -157,6 +155,7 @@ const expPDF = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1;
 
   .export {
     flex: 1;

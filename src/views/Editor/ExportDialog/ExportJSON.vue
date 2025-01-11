@@ -1,7 +1,7 @@
 <template>
   <div class="export-json-dialog">
     <div class="preview">
-      <pre>{{slides}}</pre>
+      <pre>{{ json }}</pre>
     </div>
 
     <div class="btns">
@@ -12,18 +12,27 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
 import useExport from '@/hooks/useExport'
-
-import { Button } from 'ant-design-vue'
+import Button from '@/components/Button.vue'
 
 const emit = defineEmits<{
   (event: 'close'): void
 }>()
 
-const { slides } = storeToRefs(useSlidesStore())
+const { slides, viewportRatio, title, viewportSize } = storeToRefs(useSlidesStore())
 const { exportJSON } = useExport()
+
+const json = computed(() => {
+  return {
+    title: title.value,
+    width: viewportSize.value,
+    height: viewportSize.value * viewportRatio.value,
+    slides: slides.value,
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -39,11 +48,12 @@ const { exportJSON } = useExport()
 .preview {
   width: 100%;
   height: calc(100% - 100px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   background-color: #f9f9f9;
   color: #0451a5;
+  overflow: auto;
+}
+pre {
+  font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
 .btns {
   width: 300px;
@@ -63,9 +73,10 @@ const { exportJSON } = useExport()
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
-  background-color: #f9f9f9;
+  background-color: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: #c1c1c1;
+  background-color: #e1e1e1;
+  border-radius: 5px;
 }
 </style>

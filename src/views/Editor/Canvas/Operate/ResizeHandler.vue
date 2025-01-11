@@ -3,18 +3,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { OperateResizeHandlers } from '@/types/edit'
+import { computed } from 'vue'
+import type { OperateResizeHandlers } from '@/types/edit'
 
-const props = defineProps({
-  type: {
-    type: String as PropType<OperateResizeHandlers>,
-    default: '',
-  },
-  rotate: {
-    type: Number,
-    default: 0,
-  },
+const props = withDefaults(defineProps<{
+  type?: OperateResizeHandlers
+  rotate?: number
+}>(), {
+  rotate: 0,
 })
 
 const rotateClassName = computed(() => {

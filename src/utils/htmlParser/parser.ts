@@ -1,4 +1,4 @@
-import { Token, HTMLNode, TagToken, NormalElement, TagEndToken, AttributeToken, TextToken } from './types'
+import type { Token, HTMLNode, TagToken, NormalElement, TagEndToken, AttributeToken, TextToken } from './types'
 import { closingTags, closingTagAncestorBreakers, voidTags } from './tags'
 
 interface StackItem {
@@ -26,7 +26,7 @@ export const hasTerminalParent = (tagName: string, stack: StackItem[]) => {
     while (currentIndex >= 0) {
       const parentTagName = stack[currentIndex].tagName
       if (parentTagName === tagName) break
-      if (tagParents.includes(parentTagName)) return true
+      if (parentTagName && tagParents.includes(parentTagName)) return true
       currentIndex--
     }
   }

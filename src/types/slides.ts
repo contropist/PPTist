@@ -1,5 +1,3 @@
-import { BarChartOptions, LineChartOptions, PieChartOptions } from 'chartist'
-
 export const enum ShapePathFormulasKeys {
   ROUND_RECT = 'roundRect',
   ROUND_RECT_DIAGONAL = 'roundRectDiagonal',
@@ -35,6 +33,28 @@ export const enum ElementTypes {
 }
 
 /**
+ * 渐变
+ * 
+ * type: 渐变类型（径向、线性）
+ * 
+ * colors: 渐变颜色列表（pos: 百分比位置；color: 颜色）
+ * 
+ * rotate: 渐变角度（线性渐变）
+ */
+export type GradientType = 'linear' | 'radial'
+export type GradientColor = {
+  pos: number
+  color: string
+}
+export interface Gradient {
+  type: GradientType
+  colors: GradientColor[]
+  rotate: number
+}
+
+export type LineStyleType = 'solid' | 'dashed' | 'dotted'
+
+/**
  * 元素阴影
  * 
  * h: 水平偏移量
@@ -62,10 +82,12 @@ export interface PPTElementShadow {
  * color?: 边框颜色
  */
 export interface PPTElementOutline {
-  style?: 'dashed' | 'solid'
+  style?: LineStyleType
   width?: number
   color?: string
 }
+
+export type ElementLinkType = 'web' | 'slide'
 
 /**
  * 元素超链接
@@ -75,7 +97,7 @@ export interface PPTElementOutline {
  * target: 目标地址（网页链接、幻灯片页面ID）
  */
 export interface PPTElementLink {
-  type: 'web' | 'slide'
+  type: ElementLinkType
   target: string
 }
 
@@ -117,6 +139,8 @@ interface PPTBaseElement {
 }
 
 
+export type TextType = 'title' | 'subtitle' | 'content' | 'item' | 'itemTitle' | 'notes' | 'header' | 'footer' | 'partNumber' | 'itemNumber'
+
 /**
  * 文本元素
  * 
@@ -140,11 +164,11 @@ interface PPTBaseElement {
  * 
  * shadow?: 阴影
  * 
- * textIndent?: 段落首行缩进
- * 
  * paragraphSpace?: 段间距，默认 5px
  * 
  * vertical?: 竖向文本
+ * 
+ * textType?: 文本类型
  */
 export interface PPTTextElement extends PPTBaseElement {
   type: 'text'
@@ -157,9 +181,9 @@ export interface PPTTextElement extends PPTBaseElement {
   wordSpace?: number
   opacity?: number
   shadow?: PPTElementShadow
-  textIndent?: number
   paragraphSpace?: number
   vertical?: boolean
+  textType?: TextType
 }
 
 
@@ -194,6 +218,7 @@ export interface ImageOrShapeFlip {
  * 
  * 'opacity'?: 不透明度，默认100（%）
  */
+export type ImageElementFilterKeys = 'blur' | 'brightness' | 'contrast' | 'grayscale' | 'saturate' | 'hue-rotate' | 'opacity' | 'sepia' | 'invert'
 export interface ImageElementFilters {
   'blur'?: string
   'brightness'?: string
@@ -201,6 +226,8 @@ export interface ImageElementFilters {
   'grayscale'?: string
   'saturate'?: string
   'hue-rotate'?: string
+  'sepia'?: string
+  'invert'?: string
   'opacity'?: string
 }
 
@@ -218,17 +245,7 @@ export interface ImageElementClip {
   shape: string
 }
 
-/**
- * 图片蒙版
- * 
- * color: 蒙版颜色
- * 
- * opacity: 蒙版透明度
- */
-export interface ImageColorElementMask {
-  color: string
-  opacity: number
-}
+export type ImageType = 'pageFigure' | 'itemFigure' | 'background'
 
 /**
  * 图片元素
@@ -250,6 +267,12 @@ export interface ImageColorElementMask {
  * flipV?: 垂直翻转
  * 
  * shadow?: 阴影
+ * 
+ * radius?: 圆角半径
+ * 
+ * colorMask?: 颜色蒙版
+ * 
+ * imageType?: 图片类型
  */
 export interface PPTImageElement extends PPTBaseElement {
   type: 'image'
@@ -261,24 +284,12 @@ export interface PPTImageElement extends PPTBaseElement {
   flipH?: boolean
   flipV?: boolean
   shadow?: PPTElementShadow
-  colorMask?: ImageColorElementMask
+  radius?: number
+  colorMask?: string
+  imageType?: ImageType
 }
 
-
-/**
- * 形状渐变
- * 
- * type: 渐变类型（径向、线性）
- * 
- * color: 渐变颜色
- * 
- * rotate: 渐变角度（线性渐变）
- */
-export interface ShapeGradient {
-  type: 'linear' | 'radial'
-  color: [string, string]
-  rotate: number
-}
+export type ShapeTextAlign = 'top' | 'middle' | 'bottom' 
 
 /**
  * 形状内文本
@@ -290,12 +301,15 @@ export interface ShapeGradient {
  * defaultColor: 默认颜色（会被文本内容中的HTML内联样式覆盖）
  * 
  * align: 文本对齐方向（垂直方向）
+ * 
+ * type: 文本类型
  */
 export interface ShapeText {
   content: string
   defaultFontName: string
   defaultColor: string
-  align: 'top' | 'middle' | 'bottom'
+  align: ShapeTextAlign
+  type?: TextType
 }
 
 /**
@@ -331,7 +345,7 @@ export interface ShapeText {
  * 一般情况下，形状的大小变化时仅由宽高基于 viewBox 的缩放比例来调整形状，而 viewBox 本身和 path 不会变化，
  * 但也有一些形状希望能更精确的控制一些关键点的位置，此时就需要提供路径计算公式，通过在缩放时更新 viewBox 并重新计算 path 来重新绘制形状
  * 
- * keypoint?: 关键点位置百分比
+ * keypoints?: 关键点位置百分比
  */
 export interface PPTShapeElement extends PPTBaseElement {
   type: 'shape'
@@ -339,7 +353,7 @@ export interface PPTShapeElement extends PPTBaseElement {
   path: string
   fixedRatio: boolean
   fill: string
-  gradient?: ShapeGradient
+  gradient?: Gradient
   outline?: PPTElementOutline
   opacity?: number
   flipH?: boolean
@@ -348,7 +362,7 @@ export interface PPTShapeElement extends PPTBaseElement {
   special?: boolean
   text?: ShapeText
   pathFormula?: ShapePathFormulasKeys
-  keypoint?: number
+  keypoints?: number[]
 }
 
 
@@ -363,7 +377,7 @@ export type LinePoint = '' | 'arrow' | 'dot'
  * 
  * end: 终点位置（[x, y]）
  * 
- * style: 线条样式（实线、虚线）
+ * style: 线条样式（实线、虚线、点线）
  * 
  * color: 线条颜色
  * 
@@ -373,6 +387,8 @@ export type LinePoint = '' | 'arrow' | 'dot'
  * 
  * broken?: 折线控制点位置（[x, y]）
  * 
+ * broken2?: 双折线控制点位置（[x, y]）
+ * 
  * curve?: 二次曲线控制点位置（[x, y]）
  * 
  * cubic?: 三次曲线控制点位置（[[x1, y1], [x2, y2]]）
@@ -381,19 +397,24 @@ export interface PPTLineElement extends Omit<PPTBaseElement, 'height' | 'rotate'
   type: 'line'
   start: [number, number]
   end: [number, number]
-  style: 'solid' | 'dashed'
+  style: LineStyleType
   color: string
   points: [LinePoint, LinePoint]
   shadow?: PPTElementShadow
   broken?: [number, number]
+  broken2?: [number, number]
   curve?: [number, number]
   cubic?: [[number, number], [number, number]]
 }
 
 
-export type PresetChartType = 'bar' | 'horizontalBar' | 'line' | 'area' | 'scatter' | 'pie' | 'ring'
-export type ChartType = 'bar' | 'line' | 'pie'
-export type ChartOptions = LineChartOptions & BarChartOptions & PieChartOptions
+export type ChartType = 'bar' | 'column' | 'line' | 'pie' | 'ring' | 'area' | 'radar' | 'scatter'
+
+export interface ChartOptions {
+  lineSmooth?: boolean
+  stack?: boolean
+}
+
 export interface ChartData {
   labels: string[]
   legends: string[]
@@ -411,15 +432,13 @@ export interface ChartData {
  * 
  * data: 图表数据
  * 
- * options?: 图表配置项
+ * options: 扩展选项
  * 
  * outline?: 边框
  * 
- * themeColor: 主题色
+ * themeColors: 主题色
  * 
- * gridColor?: 网格&坐标颜色
- * 
- * legend?: 图例/位置
+ * textColor?: 文字颜色
  */
 export interface PPTChartElement extends PPTBaseElement {
   type: 'chart'
@@ -428,12 +447,12 @@ export interface PPTChartElement extends PPTBaseElement {
   data: ChartData
   options?: ChartOptions
   outline?: PPTElementOutline
-  themeColor: string[]
-  gridColor?: string
-  legend?: '' | 'top' | 'bottom'
+  themeColors: string[]
+  textColor?: string
 }
 
 
+export type TextAlign = 'left' | 'center' | 'right' | 'justify'
 /**
  * 表格单元格样式
  * 
@@ -464,7 +483,7 @@ export interface TableCellStyle {
   backcolor?: string
   fontsize?: string
   fontname?: string
-  align?: 'left' | 'center' | 'right'
+  align?: TextAlign
 }
 
 
@@ -569,12 +588,18 @@ export interface PPTLatexElement extends PPTBaseElement {
  * 
  * src: 视频地址
  * 
+ * autoplay: 自动播放
+ * 
  * poster: 预览封面
+ * 
+ * ext: 视频后缀，当资源链接缺少后缀时用该字段确认资源类型
  */
 export interface PPTVideoElement extends PPTBaseElement {
   type: 'video'
   src: string
+  autoplay: boolean
   poster?: string
+  ext?: string
 }
 
 /**
@@ -591,19 +616,24 @@ export interface PPTVideoElement extends PPTBaseElement {
  * autoplay: 自动播放
  * 
  * src: 音频地址
+ * 
+ * ext: 音频后缀，当资源链接缺少后缀时用该字段确认资源类型
  */
 export interface PPTAudioElement extends PPTBaseElement {
   type: 'audio'
   fixedRatio: boolean
-  color: string,
-  loop: boolean,
-  autoplay: boolean,
+  color: string
+  loop: boolean
+  autoplay: boolean
   src: string
+  ext?: string
 }
 
 
 export type PPTElement = PPTTextElement | PPTImageElement | PPTShapeElement | PPTLineElement | PPTChartElement | PPTTableElement | PPTLatexElement | PPTVideoElement | PPTAudioElement
 
+export type AnimationType = 'in' | 'out' | 'attention'
+export type AnimationTrigger = 'click' | 'meantime' | 'auto'
 
 /**
  * 元素动画
@@ -624,9 +654,16 @@ export interface PPTAnimation {
   id: string
   elId: string
   effect: string
-  type: 'in' | 'out' | 'attention'
+  type: AnimationType
   duration: number
-  trigger: 'click' | 'meantime' | 'auto'
+  trigger: AnimationTrigger
+}
+
+export type SlideBackgroundType = 'solid' | 'image' | 'gradient'
+export type SlideBackgroundImageSize = 'cover' | 'contain' | 'repeat'
+export interface SlideBackgroundImage {
+  src: string
+  size: SlideBackgroundImageSize,
 }
 
 /**
@@ -636,28 +673,42 @@ export interface PPTAnimation {
  * 
  * color?: 背景颜色（纯色）
  * 
- * image?: 图片地址（图片）
+ * image?: 图片背景
  * 
- * imageSize?: 图片填充方式
- * 
- * gradientType?: 渐变类型（线性、径向）
- * 
- * gradientColor?: 渐变颜色
- * 
- * gradientRotate?: 渐变角度（线性）
+ * gradientType?: 渐变背景
  */
 export interface SlideBackground {
-  type: 'solid' | 'image' | 'gradient'
+  type: SlideBackgroundType
   color?: string
-  image?: string
-  imageSize?: 'cover' | 'contain' | 'repeat'
-  gradientType?: 'linear' | 'radial'
-  gradientColor?: [string, string]
-  gradientRotate?: number
+  image?: SlideBackgroundImage
+  gradient?: Gradient
 }
 
 
-export type TurningMode = 'no' | 'fade' | 'slideX' | 'slideY'
+export type TurningMode = 'no' | 'fade' | 'slideX' | 'slideY' | 'random' | 'slideX3D' | 'slideY3D' | 'rotate' | 'scaleY' | 'scaleX' | 'scale' | 'scaleReverse'
+
+export interface NoteReply {
+  id: string
+  content: string
+  time: number
+  user: string
+}
+
+export interface Note {
+  id: string
+  content: string
+  time: number
+  user: string
+  elId?: string
+  replies?: NoteReply[]
+}
+
+export interface SectionTag {
+  id: string
+  title?: string
+}
+
+export type SlideType = 'cover' | 'contents' | 'transition' | 'content' | 'end'
 
 /**
  * 幻灯片页面
@@ -666,6 +717,8 @@ export type TurningMode = 'no' | 'fade' | 'slideX' | 'slideY'
  * 
  * elements: 元素集合
  * 
+ * notes?: 批注
+ * 
  * remark?: 备注
  * 
  * background?: 页面背景
@@ -673,14 +726,19 @@ export type TurningMode = 'no' | 'fade' | 'slideX' | 'slideY'
  * animations?: 元素动画集合
  * 
  * turningMode?: 翻页方式
+ * 
+ * slideType?: 页面类型
  */
 export interface Slide {
   id: string
   elements: PPTElement[]
+  notes?: Note[]
   remark?: string
   background?: SlideBackground
   animations?: PPTAnimation[]
   turningMode?: TurningMode
+  sectionTag?: SectionTag
+  type?: SlideType
 }
 
 /**
@@ -699,4 +757,6 @@ export interface SlideTheme {
   themeColor: string
   fontColor: string
   fontName: string
+  outline: PPTElementOutline
+  shadow: PPTElementShadow
 }

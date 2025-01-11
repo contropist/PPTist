@@ -1,10 +1,9 @@
-import { Ref } from 'vue'
+import type { Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore, useKeyboardStore } from '@/store'
-import { PPTElement } from '@/types/slides'
-import { AlignmentLineProps } from '@/types/edit'
-import { VIEWPORT_SIZE } from '@/configs/canvas'
-import { getRectRotatedRange, AlignLine, uniqAlignLines } from '@/utils/element'
+import type { PPTElement } from '@/types/slides'
+import type { AlignmentLineProps } from '@/types/edit'
+import { getRectRotatedRange, uniqAlignLines, type AlignLine } from '@/utils/element'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
 export default (
@@ -15,7 +14,7 @@ export default (
   const slidesStore = useSlidesStore()
   const { activeElementIdList, activeGroupElementId } = storeToRefs(useMainStore())
   const { shiftKeyState } = storeToRefs(useKeyboardStore())
-  const { viewportRatio } = storeToRefs(slidesStore)
+  const { viewportRatio, viewportSize } = storeToRefs(slidesStore)
 
   const { addHistorySnapshot } = useHistorySnapshot()
 
@@ -26,8 +25,8 @@ export default (
     if (!activeElementIdList.value.includes(element.id)) return
     let isMouseDown = true
 
-    const edgeWidth = VIEWPORT_SIZE
-    const edgeHeight = VIEWPORT_SIZE * viewportRatio.value
+    const edgeWidth = viewportSize.value
+    const edgeHeight = viewportSize.value * viewportRatio.value
     
     const sorptionRange = 5
 

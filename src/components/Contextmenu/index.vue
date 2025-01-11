@@ -2,7 +2,7 @@
   <div 
     class="mask"
     @contextmenu.prevent="removeContextmenu()"
-    @mousedown="removeContextmenu()"
+    @mousedown.left="removeContextmenu()"
   ></div>
 
   <div 
@@ -21,32 +21,20 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { ContextmenuItem, Axis } from './types'
+import { computed } from 'vue'
+import type { ContextmenuItem, Axis } from './types'
 
 import MenuContent from './MenuContent.vue'
 
-const props = defineProps({
-  axis: {
-    type: Object as PropType<Axis>,
-    required: true,
-  },
-  el: {
-    type: Object as PropType<HTMLElement>,
-    required: true,
-  },
-  menus: {
-    type: Array as PropType<ContextmenuItem[]>,
-    required: true,
-  },
-  removeContextmenu: {
-    type: Function,
-    required: true,
-  },
-})
+const props = defineProps<{
+  axis: Axis
+  el: HTMLElement
+  menus: ContextmenuItem[]
+  removeContextmenu: () => void
+}>()
 
 const style = computed(() => {
-  const MENU_WIDTH = 170
+  const MENU_WIDTH = 180
   const MENU_HEIGHT = 30
   const DIVIDER_HEIGHT = 11
   const PADDING = 5

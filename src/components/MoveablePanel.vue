@@ -1,9 +1,10 @@
 <template>
   <div 
     class="moveable-panel"
+    ref="moveablePanelRef"
     :style="{
-      width: width + 'px',
-      height: height + 'px',
+      width: w + 'px',
+      height: h ? h + 'px' : 'auto',
       left: x + 'px',
       top: y + 'px',
     }"
@@ -22,37 +23,36 @@
     <div v-else class="content" @mousedown="$event => startMove($event)">
       <slot></slot>
     </div>
+
+    <div class="resizer" v-if="resizeable" @mousedown="$event => startResize($event)"></div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
-const props = defineProps({
-  width: {
-    type: Number,
-    required: true,
-  },
-  height: {
-    type: Number,
-    required: true,
-  },
-  left: {
-    type: Number,
-    default: 10,
-  },
-  top: {
-    type: Number,
-    default: 10,
-  },
-  title: {
-    type: String,
-    default: '',
-  },
-  moveable: {
-    type: Boolean,
-    default: true,
-  },
+const props = withDefaults(defineProps<{
+  width: number
+  height: number
+  minWidth?: number
+  minHeight?: number
+  maxWidth?: number
+  maxHeight?: number
+  left?: number
+  top?: number
+  title?: string
+  moveable?: boolean
+  resizeable?: boolean
+}>(), {
+  minWidth: 20,
+  minHeight: 20,
+  maxWidth: 500,
+  maxHeight: 500,
+  left: 10,
+  top: 10,
+  title: '',
+  moveable: true,
+  resizeable: false,
 })
 
 const emit = defineEmits<{
@@ -61,13 +61,25 @@ const emit = defineEmits<{
 
 const x = ref(0)
 const y = ref(0)
+const w = ref(0)
+const h = ref(0)
+const moveablePanelRef = ref<HTMLElement>()
+const realHeight = computed(() => {
+  if (!h.value) {
+    return moveablePanelRef.value?.clientHeight || 0
+  }
+  return h.value
+})
 
 onMounted(() => {
   if (props.left >= 0) x.value = props.left
   else x.value = document.body.clientWidth + props.left - props.width
 
   if (props.top >= 0) y.value = props.top
-  else y.value = document.body.clientHeight + props.top - props.height
+  else y.value = document.body.clientHeight + props.top - realHeight.value
+
+  w.value = props.width
+  h.value = props.height
 })
 
 const startMove = (e: MouseEvent) => {
@@ -95,11 +107,47 @@ const startMove = (e: MouseEvent) => {
 
     if (left < 0) left = 0
     if (top < 0) top = 0
-    if (left + props.width > windowWidth) left = windowWidth - props.width
-    if (top + props.height > clientHeight) top = clientHeight - props.height
+    if (left + w.value > windowWidth) left = windowWidth - w.value
+    if (top + realHeight.value > clientHeight) top = clientHeight - realHeight.value
 
     x.value = left
     y.value = top
+  }
+  document.onmouseup = () => {
+    isMouseDown = false
+
+    document.onmousemove = null
+    document.onmouseup = null
+  }
+}
+
+const startResize = (e: MouseEvent) => {
+  if (!props.resizeable) return
+
+  let isMouseDown = true
+
+  const startPageX = e.pageX
+  const startPageY = e.pageY
+
+  const originWidth = w.value
+  const originHeight = h.value
+
+  document.onmousemove = e => {
+    if (!isMouseDown) return
+
+    const moveX = e.pageX - startPageX
+    const moveY = e.pageY - startPageY
+
+    let width = originWidth + moveX
+    let height = originHeight + moveY
+
+    if (width < props.minWidth) width = props.minWidth
+    if (height < props.minHeight) height = props.minHeight
+    if (width > props.maxWidth) width = props.maxWidth
+    if (height > props.maxHeight) height = props.maxHeight
+
+    w.value = width
+    h.value = height
   }
   document.onmouseup = () => {
     isMouseDown = false
@@ -114,12 +162,33 @@ const startMove = (e: MouseEvent) => {
 .moveable-panel {
   position: fixed;
   background-color: #fff;
-  box-shadow: 0 2px 12px 0 rgba(56, 56, 56, .15);
+  box-shadow: $boxShadow;
   border: 1px solid $borderColor;
   border-radius: $borderRadius;
   display: flex;
   flex-direction: column;
   z-index: 999;
+}
+.resizer {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    transform: rotate(45deg);
+    transform-origin: center;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-left-color: #e1e1e1;
+  }
 }
 .header {
   height: 40px;
@@ -140,7 +209,7 @@ const startMove = (e: MouseEvent) => {
   justify-content: center;
   align-items: center;
   color: #666;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
 }
 .content {
