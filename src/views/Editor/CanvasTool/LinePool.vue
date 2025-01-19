@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-import { LINE_LIST, LinePoolItem } from '@/configs/lines'
+import { LINE_LIST, type LinePoolItem } from '@/configs/lines'
 
 import LinePointMarker from '@/views/components/element/LineElement/LinePointMarker.vue'
 
@@ -72,11 +72,12 @@ const selectLine = (line: LinePoolItem) => {
 }
 .category-name {
   width: 100%;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 10px;
-  border-left: 4px solid #aaa;
-  background-color: #eee;
-  padding: 2px 0 2px 10px;
+  border-left: 4px solid #bbb;
+  background-color: #f1f1f1;
+  padding: 3px 0 3px 8px;
+  color: #555;
 }
 .line-list {
   @include flex-grid-layout();

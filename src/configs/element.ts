@@ -1,4 +1,4 @@
-export const ELEMENT_TYPE_ZH = {
+export const ELEMENT_TYPE_ZH: { [key: string]: string } = {
   text: '文本',
   image: '图片',
   shape: '形状',
@@ -10,12 +10,12 @@ export const ELEMENT_TYPE_ZH = {
   latex: '公式',
 }
 
-export const MIN_SIZE = {
-  text: 20,
+export const MIN_SIZE: { [key: string]: number } = {
+  text: 40,
   image: 20,
-  shape: 15,
+  shape: 20,
   chart: 200,
-  table: 20,
+  table: 30,
   video: 250,
   audio: 20,
   latex: 20,

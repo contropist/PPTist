@@ -18,27 +18,24 @@
       :width="elementInfo.width"
       :height="elementInfo.height"
       :outline="elementInfo.outline"
-      :createPath="clipShape.createPath"
+      :createPath="clipShape.createPath!"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { PPTImageElement } from '@/types/slides'
+import { computed } from 'vue'
+import type { PPTImageElement } from '@/types/slides'
 import useClipImage from '../useClipImage'
 
 import ImageRectOutline from './ImageRectOutline.vue'
 import ImageEllipseOutline from './ImageEllipseOutline.vue'
 import ImagePolygonOutline from './ImagePolygonOutline.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTImageElement>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTImageElement
+}>()
 
-const clip = computed(() => props.elementInfo.clip)
-const { clipShape } = useClipImage(clip)
+const imageElement = computed(() => props.elementInfo)
+const { clipShape } = useClipImage(imageElement)
 </script>

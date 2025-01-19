@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-import { SHAPE_LIST, ShapePoolItem } from '@/configs/shapes'
+import { SHAPE_LIST, type ShapePoolItem } from '@/configs/shapes'
 import ShapeItemThumbnail from './ShapeItemThumbnail.vue'
 
 const emit = defineEmits<{
@@ -33,19 +33,20 @@ const selectShape = (shape: ShapePoolItem) => {
   width: 340px;
   max-height: 520px;
   overflow: auto;
-  margin-top: -12px;
-  margin-bottom: -12px;
-  margin-right: -12px;
-  padding-right: 12px;
-  padding-top: 12px;
+  margin-top: -8px;
+  margin-bottom: -8px;
+  margin-right: -10px;
+  padding-right: 10px;
+  padding-top: 10px;
 }
 .category-name {
   width: 100%;
-  font-size: 13px;
+  font-size: 12px;
   margin-bottom: 10px;
-  border-left: 4px solid #aaa;
-  background-color: #eee;
-  padding: 2px 0 2px 10px;
+  border-left: 4px solid #bbb;
+  background-color: #f1f1f1;
+  padding: 3px 0 3px 8px;
+  color: #555;
 }
 .shape-list {
   @include flex-grid-layout();

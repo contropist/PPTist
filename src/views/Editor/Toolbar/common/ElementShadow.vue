@@ -1,55 +1,55 @@
 <template>
   <div class="element-shadow">
     <div class="row">
-      <div style="flex: 2;">启用阴影：</div>
-      <div class="switch-wrapper" style="flex: 3;">
-        <Switch :checked="hasShadow" @change="checked => toggleShadow(checked as boolean)" />
+      <div style="width: 40%;">启用阴影：</div>
+      <div class="switch-wrapper" style="width: 60%;">
+        <Switch :value="hasShadow" @update:value="value => toggleShadow(value)" />
       </div>
     </div>
     <template v-if="hasShadow && shadow">
       <div class="row">
-        <div style="flex: 2;">水平阴影：</div>
+        <div style="width: 40%;">水平阴影：</div>
         <Slider 
-          class="slider"
+          style="width: 60%;"
           :min="-10" 
           :max="10" 
           :step="1" 
           :value="shadow.h" 
-          @change="value => updateShadow({ h: value as number })"
+          @update:value="value => updateShadow({ h: value as number })"
         />
       </div>
       <div class="row">
-        <div style="flex: 2;">垂直阴影：</div>
+        <div style="width: 40%;">垂直阴影：</div>
         <Slider
-          class="slider"
+          style="width: 60%;"
           :min="-10"
           :max="10"
           :step="1"
           :value="shadow.v"
-          @change="value => updateShadow({ v: value as number })"
+          @update:value="value => updateShadow({ v: value as number })"
         />
       </div>
       <div class="row">
-        <div style="flex: 2;">模糊距离：</div>
+        <div style="width: 40%;">模糊距离：</div>
         <Slider
-          class="slider"
+          style="width: 60%;"
           :min="1"
           :max="20"
           :step="1"
           :value="shadow.blur"
-          @change="value => updateShadow({ blur: value as number })"
+          @update:value="value => updateShadow({ blur: value as number })"
         />
       </div>
       <div class="row">
-        <div style="flex: 2;">阴影颜色：</div>
-        <Popover trigger="click">
+        <div style="width: 40%;">阴影颜色：</div>
+        <Popover trigger="click" style="width: 60%;">
           <template #content>
             <ColorPicker
               :modelValue="shadow.color"
               @update:modelValue="value => updateShadow({ color: value })"
             />
           </template>
-          <ColorButton :color="shadow.color" style="flex: 3;" />
+          <ColorButton :color="shadow.color" />
         </Popover>
       </div>
     </template>
@@ -60,18 +60,17 @@
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTElementShadow } from '@/types/slides'
+import type { PPTElementShadow } from '@/types/slides'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
-import ColorButton from './ColorButton.vue'
+import ColorButton from '@/components/ColorButton.vue'
 import ColorPicker from '@/components/ColorPicker/index.vue'
-import {
-  Popover,
-  Slider,
-  Switch,
-} from 'ant-design-vue'
+import Switch from '@/components/Switch.vue'
+import Slider from '@/components/Slider.vue'
+import Popover from '@/components/Popover.vue'
 
 const slidesStore = useSlidesStore()
+const { theme } = storeToRefs(slidesStore)
 const { handleElement } = storeToRefs(useMainStore())
 
 const shadow = ref<PPTElementShadow>()
@@ -95,7 +94,7 @@ const updateShadow = (shadowProps: Partial<PPTElementShadow>) => {
 const toggleShadow = (checked: boolean) => {
   if (!handleElement.value) return
   if (checked) {
-    const _shadow: PPTElementShadow = { h: 1, v: 1, blur: 2, color: '#000' }
+    const _shadow: PPTElementShadow = theme.value.shadow
     slidesStore.updateElement({ id: handleElement.value.id, props: { shadow: _shadow } })
   }
   else {
@@ -108,14 +107,12 @@ const toggleShadow = (checked: boolean) => {
 <style lang="scss" scoped>
 .row {
   width: 100%;
+  height: 30px;
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
 .switch-wrapper {
   text-align: right;
-}
-.slider {
-  flex: 3;
 }
 </style>

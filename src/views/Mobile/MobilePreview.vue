@@ -18,21 +18,18 @@
 </template>
 
 <script lang="ts" setup>
-import { PropType, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
 import useLoadSlides from '@/hooks/useLoadSlides'
-import { Mode } from '@/types/mobile'
+import type { Mode } from '@/types/mobile'
 
 import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
-import { Divider } from 'ant-design-vue'
+import Divider from '@/components/Divider.vue'
 
-defineProps({
-  changeMode: {
-    type: Function as PropType<(mode: Mode) => void>,
-    required: true,
-  },
-})
+defineProps<{
+  changeMode: (mode: Mode) => void
+}>()
 
 const { slides } = storeToRefs(useSlidesStore())
 const { slidesLoadLimit } = useLoadSlides()

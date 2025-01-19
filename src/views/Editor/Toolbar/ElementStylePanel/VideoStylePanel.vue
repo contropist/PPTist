@@ -4,26 +4,39 @@
     <div class="background-image-wrapper">
       <FileInput @change="files => setVideoPoster(files)">
         <div class="background-image">
-          <div class="content" :style="{ backgroundImage: `url(${handleVideoElement.poster})` }">
+          <div class="content" :style="{ backgroundImage: handleVideoElement.poster ? `url(${handleVideoElement.poster})` : '' }">
             <IconPlus />
           </div>
         </div>
       </FileInput>
     </div>
-    <div class="row"><Button style="flex: 1;" @click="updateVideo({ poster: '' })">重置封面</Button></div>
+    <div class="row">
+      <Button style="flex: 1;" @click="updateVideo({ poster: '' })">重置封面</Button>
+    </div>
+
+    <div class="row switch-row">
+      <div style="width: 40%;">自动播放：</div>
+      <div class="switch-wrapper" style="width: 60%;">
+        <Switch 
+          :value="handleVideoElement.autoplay" 
+          @update:value="value => updateVideo({ autoplay: value })" 
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Ref } from 'vue'
+import type { Ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { PPTVideoElement } from '@/types/slides'
+import type { PPTVideoElement } from '@/types/slides'
 import { getImageDataURL } from '@/utils/image'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
 import FileInput from '@/components/FileInput.vue'
-import { Button } from 'ant-design-vue'
+import Button from '@/components/Button.vue'
+import Switch from '@/components/Switch.vue'
 
 const slidesStore = useSlidesStore()
 const { handleElement } = storeToRefs(useMainStore())
@@ -83,5 +96,11 @@ const setVideoPoster = (files: FileList) => {
     background-repeat: no-repeat;
     cursor: pointer;
   }
+}
+.switch-row {
+  height: 32px;
+}
+.switch-wrapper {
+  text-align: right;
 }
 </style>

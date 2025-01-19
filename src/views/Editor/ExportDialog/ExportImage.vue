@@ -59,9 +59,7 @@
       <div class="row">
         <div class="title">忽略在线字体：</div>
         <div class="config-item">
-          <Tooltip :mouseLeaveDelay="0" :mouseEnterDelay="0.5" title="导出时默认忽略在线字体，若您在幻灯片中使用了在线字体，且希望导出后保留相关样式，可选择关闭【忽略在线字体】选项，但要注意这将会增加导出用时。">
-            <Switch v-model:checked="ignoreWebfont" />
-          </Tooltip>
+          <Switch v-model:value="ignoreWebfont" v-tooltip="'导出时默认忽略在线字体，若您在幻灯片中使用了在线字体，且希望导出后保留相关样式，可选择关闭【忽略在线字体】选项，但要注意这将会增加导出用时。'" />
         </div>
       </div>
     </div>
@@ -83,14 +81,11 @@ import useExport from '@/hooks/useExport'
 
 import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
 import FullscreenSpin from '@/components/FullscreenSpin.vue'
-import {
-  Button,
-  Tooltip,
-  Slider,
-  Switch,
-  Radio,
-} from 'ant-design-vue'
-const { Group: RadioGroup, Button: RadioButton } = Radio
+import Switch from '@/components/Switch.vue'
+import Slider from '@/components/Slider.vue'
+import Button from '@/components/Button.vue'
+import RadioButton from '@/components/RadioButton.vue'
+import RadioGroup from '@/components/RadioGroup.vue'
 
 const emit = defineEmits<{
   (event: 'close'): void
@@ -177,6 +172,7 @@ const expImage = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1;
 
   .export {
     flex: 1;

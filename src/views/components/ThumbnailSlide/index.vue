@@ -8,8 +8,8 @@
     <div 
       class="elements"
       :style="{
-        width: VIEWPORT_SIZE + 'px',
-        height: VIEWPORT_SIZE * viewportRatio + 'px',
+        width: viewportSize + 'px',
+        height: viewportSize * viewportRatio + 'px',
         transform: `scale(${scale})`,
       }"
       v-if="visible"
@@ -27,37 +27,29 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType, provide } from 'vue'
+import { computed, provide } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
-import { Slide } from '@/types/slides'
+import type { Slide } from '@/types/slides'
 import { injectKeySlideScale } from '@/types/injectKey'
-import { VIEWPORT_SIZE } from '@/configs/canvas'
 import useSlideBackgroundStyle from '@/hooks/useSlideBackgroundStyle'
 
 import ThumbnailElement from './ThumbnailElement.vue'
 
-const props = defineProps({
-  slide: {
-    type: Object as PropType<Slide>,
-    required: true,
-  },
-  size: {
-    type: Number,
-    required: true,
-  },
-  visible: {
-    type: Boolean,
-    default: true,
-  },
+const props = withDefaults(defineProps<{
+  slide: Slide
+  size: number
+  visible?: boolean
+}>(), {
+  visible: true,
 })
 
-const { viewportRatio } = storeToRefs(useSlidesStore())
+const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
 
 const background = computed(() => props.slide.background)
 const { backgroundStyle } = useSlideBackgroundStyle(background)
 
-const scale = computed(() => props.size / VIEWPORT_SIZE)
+const scale = computed(() => props.size / viewportSize.value)
 provide(injectKeySlideScale, scale)
 </script>
 

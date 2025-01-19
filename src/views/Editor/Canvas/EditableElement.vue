@@ -17,9 +17,9 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import { ElementTypes, PPTElement } from '@/types/slides'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
+import { computed } from 'vue'
+import { ElementTypes, type PPTElement } from '@/types/slides'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 
 import useLockElement from '@/hooks/useLockElement'
 import useDeleteElement from '@/hooks/useDeleteElement'
@@ -27,7 +27,7 @@ import useCombineElement from '@/hooks/useCombineElement'
 import useOrderElement from '@/hooks/useOrderElement'
 import useAlignElementToCanvas from '@/hooks/useAlignElementToCanvas'
 import useCopyAndPasteElement from '@/hooks/useCopyAndPasteElement'
-import useSelectAllElement from '@/hooks/useSelectAllElement'
+import useSelectElement from '@/hooks/useSelectElement'
 
 import { ElementOrderCommands, ElementAlignCommands } from '@/types/edit'
 
@@ -41,30 +41,15 @@ import LatexElement from '@/views/components/element/LatexElement/index.vue'
 import VideoElement from '@/views/components/element/VideoElement/index.vue'
 import AudioElement from '@/views/components/element/AudioElement/index.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTElement>,
-    required: true,
-  },
-  elementIndex: {
-    type: Number,
-    required: true,
-  },
-  isMultiSelect: {
-    type: Boolean,
-    required: true,
-  },
-  selectElement: {
-    type: Function as PropType<(e: MouseEvent | TouchEvent, element: PPTElement, canMove?: boolean) => void>,
-    required: true,
-  },
-  openLinkDialog: {
-    type: Function as PropType<() => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTElement
+  elementIndex: number
+  isMultiSelect: boolean
+  selectElement: (e: MouseEvent | TouchEvent, element: PPTElement, canMove?: boolean) => void
+  openLinkDialog: () => void
+}>()
 
-const currentElementComponent = computed(() => {
+const currentElementComponent = computed<unknown>(() => {
   const elementTypeMap = {
     [ElementTypes.IMAGE]: ImageElement,
     [ElementTypes.TEXT]: TextElement,
@@ -85,7 +70,7 @@ const { combineElements, uncombineElements } = useCombineElement()
 const { deleteElement } = useDeleteElement()
 const { lockElement, unlockElement } = useLockElement()
 const { copyElement, pasteElement, cutElement } = useCopyAndPasteElement()
-const { selectAllElement } = useSelectAllElement()
+const { selectAllElements } = useSelectElement()
 
 const contextmenus = (): ContextmenuItem[] => {
   if (props.elementInfo.lock) {
@@ -165,7 +150,7 @@ const contextmenus = (): ContextmenuItem[] => {
     {
       text: '全选',
       subText: 'Ctrl + A',
-      handler: selectAllElement,
+      handler: selectAllElements,
     },
     {
       text: '锁定',

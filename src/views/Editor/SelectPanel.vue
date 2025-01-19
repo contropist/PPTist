@@ -10,8 +10,8 @@
   >
     <div class="handler" v-if="elements.length">
       <div class="btns">
-        <Button size="small" style="margin-right: 5px;" @click="showAll()">全部显示</Button>
-        <Button size="small" @click="hideAll()">全部隐藏</Button>
+        <Button size="small" style="margin-right: 5px;" @click="showAllElements()">全部显示</Button>
+        <Button size="small" @click="hideAllElements()">全部隐藏</Button>
       </div>
       <div class="icon-btns" v-if="handleElement">
         <IconDown class="icon-btn" @click="orderElement(handleElement!, ElementOrderCommands.UP)" />
@@ -34,7 +34,7 @@
             @dblclick="enterEdit(groupItem.id)"
           >
             <input 
-              :id="`input-${groupItem.id}`" 
+              :id="`select-panel-input-${groupItem.id}`" 
               :value="groupItem.name || ELEMENT_TYPE_ZH[groupItem.type]" 
               class="input" 
               type="text" 
@@ -44,8 +44,8 @@
             >
             <div v-else class="name">{{groupItem.name || ELEMENT_TYPE_ZH[groupItem.type]}}</div>
             <div class="icons">
-              <IconPreviewClose style="font-size: 17px;" @click.stop="hideElement(groupItem.id)" v-if="hiddenElementIdList.includes(groupItem.id)" />
-              <IconPreviewOpen style="font-size: 17px;" @click.stop="hideElement(groupItem.id)" v-else />
+              <IconPreviewClose style="font-size: 17px;" @click.stop="toggleHideElement(groupItem.id)" v-if="hiddenElementIdList.includes(groupItem.id)" />
+              <IconPreviewOpen style="font-size: 17px;" @click.stop="toggleHideElement(groupItem.id)" v-else />
             </div>
           </div>
         </div>
@@ -53,11 +53,11 @@
           class="item" 
           :class="{ 'active': activeElementIdList.includes(item.id) }"
           v-else 
-          @click="selectEl(item.id)"
+          @click="selectElement(item.id)"
           @dblclick="enterEdit(item.id)"
         >
           <input 
-            :id="`input-${item.id}`" 
+            :id="`select-panel-input-${item.id}`" 
             :value="item.name || ELEMENT_TYPE_ZH[item.type]" 
             class="input" 
             type="text" 
@@ -67,8 +67,8 @@
           >
           <div v-else class="name">{{item.name || ELEMENT_TYPE_ZH[item.type]}}</div>
           <div class="icons">
-            <IconPreviewClose style="font-size: 17px;" @click.stop="hideElement(item.id)" v-if="hiddenElementIdList.includes(item.id)" />
-            <IconPreviewOpen style="font-size: 17px;" @click.stop="hideElement(item.id)" v-else />
+            <IconPreviewClose style="font-size: 17px;" @click.stop="toggleHideElement(item.id)" v-if="hiddenElementIdList.includes(item.id)" />
+            <IconPreviewOpen style="font-size: 17px;" @click.stop="toggleHideElement(item.id)" v-else />
           </div>
         </div>
       </template>
@@ -80,13 +80,15 @@
 import { computed, nextTick, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore, useMainStore } from '@/store'
-import { PPTElement } from '@/types/slides'
+import type { PPTElement } from '@/types/slides'
 import { ELEMENT_TYPE_ZH } from '@/configs/element'
 import useOrderElement from '@/hooks/useOrderElement'
+import useHideElement from '@/hooks/useHideElement'
+import useSelectElement from '@/hooks/useSelectElement'
 import { ElementOrderCommands } from '@/types/edit'
 
 import MoveablePanel from '@/components/MoveablePanel.vue'
-import { Button, Input } from 'ant-design-vue'
+import Button from '@/components/Button.vue'
 
 const slidesStore = useSlidesStore()
 const mainStore = useMainStore()
@@ -94,6 +96,8 @@ const { currentSlide } = storeToRefs(slidesStore)
 const { handleElement, handleElementId, activeElementIdList, activeGroupElementId, hiddenElementIdList } = storeToRefs(mainStore)
 
 const { orderElement } = useOrderElement()
+const { selectElement } = useSelectElement()
+const { toggleHideElement, showAllElements, hideAllElements } = useHideElement()
 
 interface GroupElements {
   type: 'group'
@@ -130,33 +134,6 @@ const selectGroupEl = (item: GroupElements, id: string) => {
   nextTick(() => mainStore.setActiveGroupElementId(id))
 }
 
-const selectEl = (id: string) => {
-  if (handleElementId.value === id) return
-  if (hiddenElementIdList.value.includes(id)) return
-
-  mainStore.setActiveElementIdList([id])
-}
-
-const hideElement = (id: string) => {
-  if (hiddenElementIdList.value.includes(id)) {
-    mainStore.setHiddenElementIdList(hiddenElementIdList.value.filter(item => item !== id))
-  }
-  else mainStore.setHiddenElementIdList([...hiddenElementIdList.value, id])
-
-  if (activeElementIdList.value.includes(id)) mainStore.setActiveElementIdList([])
-}
-
-const showAll = () => {
-  const currentSlideElIdList = currentSlide.value.elements.map(item => item.id)
-  const needHiddenElementIdList = hiddenElementIdList.value.filter(item => !currentSlideElIdList.includes(item))
-  mainStore.setHiddenElementIdList(needHiddenElementIdList)
-}
-const hideAll = () => {
-  const currentSlideElIdList = currentSlide.value.elements.map(item => item.id)
-  mainStore.setHiddenElementIdList([...hiddenElementIdList.value, ...currentSlideElIdList])
-  if (activeElementIdList.value.length) mainStore.setActiveElementIdList([])
-}
-
 const editingElId = ref('')
 
 const saveElementName = (e: FocusEvent | KeyboardEvent, id: string) => {
@@ -168,7 +145,7 @@ const saveElementName = (e: FocusEvent | KeyboardEvent, id: string) => {
 const enterEdit = (id: string) => {
   editingElId.value = id
   nextTick(() => {
-    const inputRef = document.querySelector(`#input-${id}`) as HTMLInputElement
+    const inputRef = document.querySelector(`#select-panel-input-${id}`) as HTMLInputElement
     inputRef.focus()
   })
 }
@@ -262,12 +239,13 @@ const close = () => {
 }
 .input {
   width: 100%;
-  height: 18px;
-  line-height: 18px;
+  height: 16px;
   border: 0;
   outline: 0;
   padding-left: 0;
   padding-right: 0;
   flex: 1;
+  font-size: 12px;
+  background-color: transparent;
 }
 </style>

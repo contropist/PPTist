@@ -9,15 +9,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
-import tinycolor, { ColorFormats } from 'tinycolor2'
+import { computed } from 'vue'
+import tinycolor, { type ColorFormats } from 'tinycolor2'
 
-const props = defineProps({
-  value: {
-    type: Object as PropType<ColorFormats.RGBA>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  value: ColorFormats.RGBA
+}>()
 
 const emit = defineEmits<{
   (event: 'colorChange', payload: ColorFormats.RGBA): void
@@ -32,7 +29,12 @@ const val = computed(() => {
 
 const handleInput = (e: Event) => {
   const value = (e.target as HTMLInputElement).value
-  if (value.length >= 6) emit('colorChange', tinycolor(value).toRgb())
+  if (value.length >= 6) {
+    const color = tinycolor(value)
+    if (color.isValid()) {
+      emit('colorChange', color.toRgb())
+    }
+  }
 }
 </script>
 

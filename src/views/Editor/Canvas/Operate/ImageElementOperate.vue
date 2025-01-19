@@ -20,7 +20,7 @@
       <RotateHandler
         class="operate-rotate-handler" 
         :style="{ left: scaleWidth / 2 + 'px' }"
-        @mousedown.stop="rotateElement(elementInfo)"
+        @mousedown.stop="$event => rotateElement($event, elementInfo)"
       />
     </template>
   </div>
@@ -33,35 +33,23 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store'
-import { PPTImageElement } from '@/types/slides'
-import { OperateResizeHandlers } from '@/types/edit'
+import type { PPTImageElement } from '@/types/slides'
+import type { OperateResizeHandlers } from '@/types/edit'
 import useCommonOperate from '../hooks/useCommonOperate'
 
 import RotateHandler from './RotateHandler.vue'
 import ResizeHandler from './ResizeHandler.vue'
 import BorderLine from './BorderLine.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTImageElement>,
-    required: true,
-  },
-  handlerVisible: {
-    type: Boolean,
-    required: true,
-  },
-  rotateElement: {
-    type: Function as PropType<(element: PPTImageElement) => void>,
-    required: true,
-  },
-  scaleElement: {
-    type: Function as PropType<(e: MouseEvent, element: PPTImageElement, command: OperateResizeHandlers) => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTImageElement
+  handlerVisible: boolean
+  rotateElement: (e: MouseEvent, element: PPTImageElement) => void
+  scaleElement: (e: MouseEvent, element: PPTImageElement, command: OperateResizeHandlers) => void
+}>()
 
 const { canvasScale, clipingImageElementId } = storeToRefs(useMainStore())
 

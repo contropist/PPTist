@@ -67,7 +67,7 @@
         <span>演讲者备注</span>
         <span>P {{slideIndex + 1}} / {{slides.length}}</span>
       </div>
-      <div class="remark-content" :style="{ fontSize: remarkFontSize + 'px' }" v-html="currentSlideRemark"></div>
+      <div class="remark-content ProseMirror-static" :class="{ 'empty': !currentSlideRemark }" :style="{ fontSize: remarkFontSize + 'px' }" v-html="currentSlideRemark || '无备注'"></div>
       <div class="remark-scale">
         <div :class="['scale-btn', { 'disable': remarkFontSize === 12 }]" @click="setRemarkFontSize(remarkFontSize - 2)"><IconMinus /></div>
         <div :class="['scale-btn', { 'disable': remarkFontSize === 40 }]" @click="setRemarkFontSize(remarkFontSize + 2)"><IconPlus /></div>
@@ -77,10 +77,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, nextTick, ref, watch, PropType } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSlidesStore } from '@/store'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import { enterFullscreen } from '@/utils/fullscreen'
 import { parseText2Paragraphs } from '@/utils/textParser'
 import useScreening from '@/hooks/useScreening'
@@ -93,14 +93,11 @@ import ThumbnailSlide from '@/views/components/ThumbnailSlide/index.vue'
 import ScreenSlideList from './ScreenSlideList.vue'
 import WritingBoardTool from './WritingBoardTool.vue'
 import CountdownTimer from './CountdownTimer.vue'
-import { Divider } from 'ant-design-vue'
+import Divider from '@/components/Divider.vue'
 
-const props = defineProps({
-  changeViewMode: {
-    type: Function as PropType<(mode: 'base' | 'presenter') => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  changeViewMode: (mode: 'base' | 'presenter') => void
+}>()
 
 const { slides, slideIndex, viewportRatio, currentSlide } = storeToRefs(useSlidesStore())
 
@@ -128,7 +125,8 @@ const { fullscreenState, manualExitFullscreen } = useFullscreen()
 
 const remarkFontSize = ref(16)
 const currentSlideRemark = computed(() => {
-  return parseText2Paragraphs(currentSlide.value.remark || '无备注')
+  if (!currentSlide.value.remark) return ''
+  return parseText2Paragraphs(currentSlide.value.remark)
 })
 
 const handleMousewheelThumbnails = (e: WheelEvent) => {
@@ -229,8 +227,7 @@ const contextmenus = (): ContextmenuItem[] => {
 
   .divider {
     width: 70%;
-    min-width: 70%;
-    margin: 24px 15%;
+    margin: 24px 15% !important;
   }
 
   .tool-icon {
@@ -301,6 +298,11 @@ const contextmenus = (): ContextmenuItem[] => {
     padding: 20px;
     line-height: 1.5;
     @include overflow-overlay();
+
+    &.empty {
+      color: #999;
+      font-style: italic;
+    }
   }
 
   .remark-scale {

@@ -1,6 +1,10 @@
 import { nodes } from 'prosemirror-schema-basic'
-import { Node, NodeSpec } from 'prosemirror-model'
+import type { Node, NodeSpec } from 'prosemirror-model'
 import { listItem as _listItem } from 'prosemirror-schema-list'
+
+interface Attr {
+  [key: string]: number | string
+}
 
 const orderedList: NodeSpec = {
   attrs: {
@@ -8,6 +12,12 @@ const orderedList: NodeSpec = {
       default: 1,
     },
     listStyleType: {
+      default: '',
+    },
+    fontsize: {
+      default: '',
+    },
+    color: {
       default: '',
     },
   },
@@ -18,21 +28,25 @@ const orderedList: NodeSpec = {
       tag: 'ol', 
       getAttrs: dom => {
         const order = ((dom as HTMLElement).hasAttribute('start') ? (dom as HTMLElement).getAttribute('start') : 1) || 1
-        const attr = { order: +order }
+        const attr: Attr = { order: +order }
 
-        const { listStyleType } = (dom as HTMLElement).style
+        const { listStyleType, fontSize, color } = (dom as HTMLElement).style
         if (listStyleType) attr['listStyleType'] = listStyleType
+        if (fontSize) attr['fontsize'] = fontSize
+        if (color) attr['color'] = color
 
         return attr
       }
     }
   ],
   toDOM: (node: Node) => {
-    const { order, listStyleType } = node.attrs
+    const { order, listStyleType, fontsize, color } = node.attrs
     let style = ''
     if (listStyleType) style += `list-style-type: ${listStyleType};`
+    if (fontsize) style += `font-size: ${fontsize};`
+    if (color) style += `color: ${color};`
 
-    const attr = { style }
+    const attr: Attr = { style }
     if (order !== 1) attr['start'] = order
 
 
@@ -45,6 +59,12 @@ const bulletList: NodeSpec = {
     listStyleType: {
       default: '',
     },
+    fontsize: {
+      default: '',
+    },
+    color: {
+      default: '',
+    },
   },
   content: 'list_item+',
   group: 'block',
@@ -52,15 +72,23 @@ const bulletList: NodeSpec = {
     {
       tag: 'ul',
       getAttrs: dom => {
-        const { listStyleType } = (dom as HTMLElement).style
-        return listStyleType ? { listStyleType } : {}
+        const attr: Attr = {}
+
+        const { listStyleType, fontSize, color } = (dom as HTMLElement).style
+        if (listStyleType) attr['listStyleType'] = listStyleType
+        if (fontSize) attr['fontsize'] = fontSize
+        if (color) attr['color'] = color
+
+        return attr
       }
     }
   ],
   toDOM: (node: Node) => {
-    const { listStyleType } = node.attrs
+    const { listStyleType, fontsize, color } = node.attrs
     let style = ''
     if (listStyleType) style += `list-style-type: ${listStyleType};`
+    if (fontsize) style += `font-size: ${fontsize};`
+    if (color) style += `color: ${color};`
 
     return ['ul', { style }, 0]
   },
@@ -80,6 +108,9 @@ const paragraph: NodeSpec = {
     indent: {
       default: 0,
     },
+    textIndent: {
+      default: 0,
+    },
   },
   content: 'inline*',
   group: 'block',
@@ -87,14 +118,25 @@ const paragraph: NodeSpec = {
     {
       tag: 'p',
       getAttrs: dom => {
-        const { textAlign } = (dom as HTMLElement).style
+        const { textAlign, textIndent } = (dom as HTMLElement).style
 
         let align = (dom as HTMLElement).getAttribute('align') || textAlign || ''
         align = /(left|right|center|justify)/.test(align) ? align : ''
 
+        let textIndentLevel = 0
+        if (textIndent) {
+          if (/em/.test(textIndent)) {
+            textIndentLevel = parseInt(textIndent)
+          }
+          else if (/px/.test(textIndent)) {
+            textIndentLevel = Math.floor(parseInt(textIndent) / 16)
+            if (!textIndentLevel) textIndentLevel = 1
+          }
+        }
+
         const indent = +((dom as HTMLElement).getAttribute('data-indent') || 0)
       
-        return { align, indent }
+        return { align, indent, textIndent: textIndentLevel }
       }
     },
     {
@@ -107,24 +149,30 @@ const paragraph: NodeSpec = {
     },
   ],
   toDOM: (node: Node) => {
-    const { align, indent } = node.attrs
+    const { align, indent, textIndent } = node.attrs
     let style = ''
     if (align && align !== 'left') style += `text-align: ${align};`
+    if (textIndent) style += `text-indent: ${textIndent}em;`
 
-    const attr = { style }
+    const attr: Attr = { style }
     if (indent) attr['data-indent'] = indent
 
     return ['p', attr, 0]
   },
 }
 
-// https://github.com/pipipi-pikachu/PPTist/issues/134
-const { hard_break, ...otherNodes } = nodes
+const {
+  doc,
+  blockquote,
+  text,
+} = nodes
 
 export default {
-  ...otherNodes,
+  doc,
+  paragraph,
+  blockquote,
+  text,
   'ordered_list': orderedList,
   'bullet_list': bulletList,
   'list_item': listItem,
-  paragraph,
 }

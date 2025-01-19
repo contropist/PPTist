@@ -1,37 +1,26 @@
 <template>
   <div class="element-color-mask">
     <div class="row">
-      <div style="flex: 1;">重新着色（蒙版）：</div>
-      <div class="switch-wrapper" style="flex: 1;">
+      <div style="width: 40%;">着色（蒙版）：</div>
+      <div class="switch-wrapper" style="width: 60%;">
         <Switch 
-          :checked="hasColorMask" 
-          @change="checked => toggleColorMask(checked as boolean)" 
+          :value="hasColorMask" 
+          @update:value="value => toggleColorMask(value)" 
         />
       </div>
     </div>
     <template v-if="hasColorMask">
       <div class="row" style="margin-top: 15px;">
-        <div style="flex: 2;">蒙版颜色：</div>
-        <Popover trigger="click">
+        <div style="width: 40%;">蒙版颜色：</div>
+        <Popover trigger="click" style="width: 60%;">
           <template #content>
             <ColorPicker
-              :modelValue="colorMask.color"
-              @update:modelValue="value => updateColorMask({ color: value })"
+              :modelValue="colorMask"
+              @update:modelValue="value => updateColorMask(value)"
             />
           </template>
-          <ColorButton :color="colorMask.color" style="flex: 3;" />
+          <ColorButton :color="colorMask" />
         </Popover>
-      </div>
-      <div class="row">
-        <div style="flex: 2;">不透明度：</div>
-        <Slider
-          class="opacity-slider"
-          :max="1"
-          :min="0"
-          :step="0.05"
-          :value="colorMask.opacity"
-          @change="value => updateColorMask({ opacity: value as number })"
-        />
       </div>
     </template>
   </div>
@@ -41,23 +30,19 @@
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { ImageColorElementMask } from '@/types/slides'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
 
-import ColorButton from './ColorButton.vue'
+import ColorButton from '@/components/ColorButton.vue'
 import ColorPicker from '@/components/ColorPicker/index.vue'
-import {
-  Popover,
-  Slider,
-  Switch,
-} from 'ant-design-vue'
+import Switch from '@/components/Switch.vue'
+import Popover from '@/components/Popover.vue'
 
-const defaultColorMask = { color: 'transparent', opacity: 0.3 }
+const defaultColorMask = 'rgba(226, 83, 77, 0.5)'
 
 const slidesStore = useSlidesStore()
 const { handleElement, handleElementId } = storeToRefs(useMainStore())
 
-const colorMask = ref<ImageColorElementMask>(defaultColorMask)
+const colorMask = ref(defaultColorMask)
 const hasColorMask = ref(false)
 
 const { addHistorySnapshot } = useHistorySnapshot()
@@ -83,9 +68,8 @@ const toggleColorMask = (checked: boolean) => {
   addHistorySnapshot()
 }
 
-const updateColorMask = (colorMaskProp: Partial<ImageColorElementMask>) => {
-  const newColorMask = { ...colorMask.value, ...colorMaskProp }
-  slidesStore.updateElement({ id: handleElementId.value, props: { colorMask: newColorMask } })
+const updateColorMask = (colorMask: string) => {
+  slidesStore.updateElement({ id: handleElementId.value, props: { colorMask } })
   addHistorySnapshot()
 }
 </script>
@@ -99,8 +83,5 @@ const updateColorMask = (colorMaskProp: Partial<ImageColorElementMask>) => {
 }
 .switch-wrapper {
   text-align: right;
-}
-.opacity-slider {
-  flex: 3;
 }
 </style>

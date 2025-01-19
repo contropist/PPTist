@@ -41,40 +41,22 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType, ref, watch } from 'vue'
-import { PPTElementOutline, TableCell, TableTheme } from '@/types/slides'
+import { computed, ref, watch } from 'vue'
+import type { PPTElementOutline, TableCell, TableTheme } from '@/types/slides'
 import { getTextStyle, formatText } from './utils'
 import useHideCells from './useHideCells'
 import useSubThemeColor from './useSubThemeColor'
 
-const props = defineProps({
-  data: {
-    type: Array as PropType<TableCell[][]>,
-    required: true,
-  },
-  width: {
-    type: Number,
-    required: true,
-  },
-  cellMinHeight: {
-    type: Number,
-    required: true,
-  },
-  colWidths: {
-    type: Array as PropType<number[]>,
-    required: true,
-  },
-  outline: {
-    type: Object as PropType<PPTElementOutline>,
-    required: true,
-  },
-  theme: {
-    type: Object as PropType<TableTheme>,
-  },
-  editable: {
-    type: Boolean,
-    default: true,
-  },
+const props = withDefaults(defineProps<{
+  data: TableCell[][]
+  width: number
+  cellMinHeight: number
+  colWidths: number[]
+  outline: PPTElementOutline
+  theme?: TableTheme
+  editable?: boolean
+}>(), {
+  editable: true,
 })
 
 const colSizeList = ref<number[]>([])
@@ -150,6 +132,7 @@ table {
     white-space: normal;
     word-wrap: break-word;
     vertical-align: middle;
+    background-clip: padding-box;
   }
 
   .cell-text {

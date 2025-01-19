@@ -32,11 +32,9 @@
           :height="elementInfo.height"
           :type="elementInfo.chartType"
           :data="elementInfo.data"
+          :themeColors="elementInfo.themeColors"
+          :textColor="elementInfo.textColor"
           :options="elementInfo.options"
-          :themeColor="elementInfo.themeColor"
-          :gridColor="elementInfo.gridColor"
-          :legends="elementInfo.data.legends"
-          :legend="elementInfo.legend || ''"
         />
       </div>
     </div>
@@ -44,27 +42,18 @@
 </template>
 
 <script lang="ts" setup>
-import { PropType } from 'vue'
-import { PPTChartElement } from '@/types/slides'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
+import type { PPTChartElement } from '@/types/slides'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import emitter, { EmitterEvents } from '@/utils/emitter'
 
 import ElementOutline from '@/views/components/element/ElementOutline.vue'
 import Chart from './Chart.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTChartElement>,
-    required: true,
-  },
-  selectElement: {
-    type: Function as PropType<(e: MouseEvent | TouchEvent, element: PPTChartElement, canMove?: boolean) => void>,
-    required: true,
-  },
-  contextmenus: {
-    type: Function as PropType<() => ContextmenuItem[] | null>,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTChartElement
+  selectElement: (e: MouseEvent | TouchEvent, element: PPTChartElement, canMove?: boolean) => void
+  contextmenus: () => ContextmenuItem[] | null
+}>()
 
 const handleSelectElement = (e: MouseEvent | TouchEvent) => {
   if (props.elementInfo.lock) return

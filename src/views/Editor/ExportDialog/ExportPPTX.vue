@@ -24,14 +24,24 @@
         />
       </div>
       <div class="row">
+        <div class="title">忽略音频/视频：</div>
+        <div class="config-item">
+          <Switch v-model:value="ignoreMedia" v-tooltip="'导出时默认忽略音视频，若您的幻灯片中存在音视频元素，且希望将其导出到PPTX文件中，可选择关闭【忽略音视频】选项，但要注意这将会大幅增加导出用时。'" />
+        </div>
+      </div>
+      <div class="row">
         <div class="title">覆盖默认母版：</div>
         <div class="config-item">
-          <Switch v-model:checked="masterOverwrite" />
+          <Switch v-model:value="masterOverwrite" />
         </div>
+      </div>
+
+      <div class="tip" v-if="!ignoreMedia">
+        提示：1. 支持导出格式：avi、mp4、mov、wmv、mp3、wav；2. 跨域资源无法导出。
       </div>
     </div>
     <div class="btns">
-      <Button class="btn export" type="primary" @click="exportPPTX(selectedSlides, masterOverwrite)">导出 PPTX</Button>
+      <Button class="btn export" type="primary" @click="exportPPTX(selectedSlides, masterOverwrite, ignoreMedia)">导出 PPTX</Button>
       <Button class="btn close" @click="emit('close')">关闭</Button>
     </div>
 
@@ -46,13 +56,11 @@ import { useSlidesStore } from '@/store'
 import useExport from '@/hooks/useExport'
 
 import FullscreenSpin from '@/components/FullscreenSpin.vue'
-import {
-  Button,
-  Slider,
-  Switch,
-  Radio,
-} from 'ant-design-vue'
-const { Group: RadioGroup, Button: RadioButton } = Radio
+import Switch from '@/components/Switch.vue'
+import Slider from '@/components/Slider.vue'
+import Button from '@/components/Button.vue'
+import RadioButton from '@/components/RadioButton.vue'
+import RadioGroup from '@/components/RadioGroup.vue'
 
 const emit = defineEmits<{
   (event: 'close'): void
@@ -65,6 +73,7 @@ const { exportPPTX, exporting } = useExport()
 const rangeType = ref<'all' | 'current' | 'custom'>('all')
 const range = ref<[number, number]>([1, slides.value.length])
 const masterOverwrite = ref(true)
+const ignoreMedia = ref(true)
 
 const selectedSlides = computed(() => {
   if (rangeType.value === 'all') return slides.value
@@ -113,6 +122,13 @@ const selectedSlides = computed(() => {
   }
   .config-item {
     flex: 1;
+  }
+
+  .tip {
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.8;
+    margin-top: 10px;
   }
 }
 .btns {

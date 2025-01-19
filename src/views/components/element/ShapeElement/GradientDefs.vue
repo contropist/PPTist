@@ -8,38 +8,23 @@
     y2="0%" 
     :gradientTransform="`rotate(${rotate},0.5,0.5)`"
   >
-    <stop offset="0%" :stop-color="color1" />
-    <stop offset="100%" :stop-color="color2" />
+    <stop v-for="(item, index) in colors" :key="index" :offset="`${item.pos}%`" :stop-color="item.color" />
   </linearGradient>
 
   <radialGradient :id="id" v-else>
-    <stop offset="0%" :stop-color="color1" />
-    <stop offset="100%" :stop-color="color2" />
+    <stop v-for="(item, index) in colors" :key="index" :offset="`${item.pos}%`" :stop-color="item.color" />
   </radialGradient>
 </template>
 
 <script lang="ts" setup>
-import { PropType } from 'vue'
+import type { GradientColor, GradientType } from '@/types/slides'
 
-defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  type: {
-    type: String as PropType<'linear' | 'radial'>,
-  },
-  color1: {
-    type: String,
-    required: true,
-  },
-  color2: {
-    type: String,
-    required: true,
-  },
-  rotate: {
-    type: Number,
-    default: 0,
-  },
+withDefaults(defineProps<{
+  id: string
+  type: GradientType
+  colors: GradientColor[]
+  rotate?: number
+}>(), {
+  rotate: 0,
 })
 </script>

@@ -17,35 +17,24 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
+import type { LinePoint } from '@/types/slides'
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  position: {
-    type: String as PropType<'start' | 'end'>,
-    required: true,
-  },
-  type: {
-    type: String as PropType<'dot' | 'arrow'>,
-    required: true,
-  },
-  color: {
-    type: String,
-  },
-  baseSize: {
-    type: Number,
-    required: true,
-  },
-})
+type NonEmptyLinePoint = Exclude<LinePoint, ''>
+
+const props = defineProps<{
+  id: string
+  position: 'start' | 'end'
+  type: NonEmptyLinePoint
+  baseSize: number
+  color?: string
+}>()
 
 const pathMap = {
   dot: 'm0 5a5 5 0 1 0 10 0a5 5 0 1 0 -10 0z',
   arrow: 'M0,0 L10,5 0,10 Z',
 }
-const rotateMap = {
+const rotateMap: { [key: string]: number } = {
   'arrow-start': 180,
   'arrow-end': 0,
 }

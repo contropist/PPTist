@@ -55,8 +55,7 @@
           <div class="color-mask"
             v-if="elementInfo.colorMask"
             :style="{
-              backgroundColor: elementInfo.colorMask.color,
-              opacity: elementInfo.colorMask.opacity,
+              backgroundColor: elementInfo.colorMask,
             }"
           ></div>
         </div>
@@ -66,12 +65,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore, useSlidesStore } from '@/store'
-import { ImageElementClip, PPTImageElement } from '@/types/slides'
-import { ImageClipedEmitData } from '@/types/edit'
-import { ContextmenuItem } from '@/components/Contextmenu/types'
+import type { ImageElementClip, PPTImageElement } from '@/types/slides'
+import type { ImageClipedEmitData } from '@/types/edit'
+import type { ContextmenuItem } from '@/components/Contextmenu/types'
 import useElementShadow from '@/views/components/element/hooks/useElementShadow'
 import useElementFlip from '@/views/components/element/hooks/useElementFlip'
 import useHistorySnapshot from '@/hooks/useHistorySnapshot'
@@ -81,19 +80,11 @@ import useFilter from './useFilter'
 import ImageOutline from './ImageOutline/index.vue'
 import ImageClipHandler from './ImageClipHandler.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTImageElement>,
-    required: true,
-  },
-  selectElement: {
-    type: Function as PropType<(e: MouseEvent | TouchEvent, element: PPTImageElement, canMove?: boolean) => void>,
-    required: true,
-  },
-  contextmenus: {
-    type: Function as PropType<() => ContextmenuItem[] | null>,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTImageElement
+  selectElement: (e: MouseEvent | TouchEvent, element: PPTImageElement, canMove?: boolean) => void
+  contextmenus: () => ContextmenuItem[] | null
+}>()
 
 const mainStore = useMainStore()
 const slidesStore = useSlidesStore()
@@ -110,8 +101,8 @@ const flipH = computed(() => props.elementInfo.flipH)
 const flipV = computed(() => props.elementInfo.flipV)
 const { flipStyle } = useElementFlip(flipH, flipV)
 
-const clip = computed(() => props.elementInfo.clip)
-const { clipShape, imgPosition } = useClipImage(clip)
+const imageElement = computed(() => props.elementInfo)
+const { clipShape, imgPosition } = useClipImage(imageElement)
 
 const filters = computed(() => props.elementInfo.filters)
 const { filter } = useFilter(filters)

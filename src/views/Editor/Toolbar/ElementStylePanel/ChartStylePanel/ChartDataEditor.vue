@@ -1,6 +1,29 @@
 <template>
   <div class="chart-data-editor">
     <div class="editor-content">
+      <div class="handler">
+        <div class="col-header">
+          <div class="col-header-item"
+            v-for="colIndex in 7" 
+            :key="colIndex"
+          >
+            <div class="col-key">{{ alphabet[colIndex - 1] }}</div>
+          </div>
+        </div>
+        <div class="row-header">
+          <div class="row-header-item"
+            v-for="rowIndex in 31" 
+            :key="rowIndex"
+          >
+            <div class="row-key">{{ rowIndex }}</div>
+          </div>
+        </div>
+        <div class="all-header">
+          <svg class="triangle" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8,0 L8,8 L0,8 L8,0" fill="#ccc" />
+          </svg>
+        </div>
+      </div>
       <div class="range-box">
         <div 
           class="temp-range" 
@@ -32,6 +55,7 @@
               <input 
                 :class="['item', { 'selected': rowIndex <= selectedRange[1] && colIndex <= selectedRange[0] }]"
                 :id="`cell-${rowIndex - 1}-${colIndex - 1}`"
+                v-if="!(rowIndex === 1 && colIndex === 1)"
                 autocomplete="off"
                 @focus="focusCell = [rowIndex - 1, colIndex - 1]"
                 @paste="$event => handlePaste($event, rowIndex - 1, colIndex - 1)"
@@ -44,42 +68,61 @@
 
     <div class="btns">
       <div class="left">
-        <Button class="btn" @click="clear()">清空</Button>
+        图表类型：{{ CHART_TYPE_MAP[chartType] }}
+        <Popover trigger="click" placement="top" v-model:value="chartTypeSelectVisible">
+          <template #content>
+            <PopoverMenuItem
+              center
+              v-for="item in chartList" 
+              :key="item" 
+              @click="chartType = item; chartTypeSelectVisible = false"
+            >{{CHART_TYPE_MAP[item]}}</PopoverMenuItem>
+          </template>
+          <span class="change">点击更换</span>
+        </Popover>
       </div>
       <div class="right">
         <Button class="btn" @click="closeEditor()">取消</Button>
-        <Button type="primary" class="btn" @click="getTableData()" style="margin-left: 10px;">确认</Button>
+        <Button class="btn" @click="clear()">清空数据</Button>
+        <Button type="primary" class="btn" @click="getTableData()">确认</Button>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, PropType, ref } from 'vue'
-import { ChartData } from '@/types/slides'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import type { ChartData, ChartType } from '@/types/slides'
 import { KEYS } from '@/configs/hotkey'
+import { CHART_TYPE_MAP } from '@/configs/chart'
 import { pasteCustomClipboardString, pasteExcelClipboardString } from '@/utils/clipboard'
+import Button from '@/components/Button.vue'
+import Popover from '@/components/Popover.vue'
+import PopoverMenuItem from '@/components/PopoverMenuItem.vue'
 
-import { Button, Input } from 'ant-design-vue'
-
-const props = defineProps({
-  data: {
-    type: Object as PropType<ChartData>,
-    required: true,
-  }
-})
+const props = defineProps<{
+  type: ChartType
+  data: ChartData
+}>()
 
 const emit = defineEmits<{
-  (event: 'save', payload: ChartData): void
+  (event: 'save', payload: {
+    data: ChartData
+    type: ChartType
+  }): void
   (event: 'close'): void
 }>()
 
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 const CELL_WIDTH = 100
 const CELL_HEIGHT = 32
 
+const chartList: ChartType[] = ['bar', 'column', 'line', 'area', 'scatter', 'pie', 'ring', 'radar']
+const chartTypeSelectVisible = ref(false)
 const selectedRange = ref([0, 0])
 const tempRangeSize = ref({ width: 0, height: 0 })
 const focusCell = ref<[number, number] | null>(null)
+const chartType = ref<ChartType>('bar')
 
 // 当前选区的边框线条位置
 const rangeLines = computed(() => {
@@ -102,6 +145,8 @@ const resizablePointStyle = computed(() => {
 
 // 初始化图表数据：将数据格式化并填充到DOM
 const initData = () => {
+  chartType.value = props.type
+
   const _data: string[][] = []
 
   const { labels, legends, series } = props.data
@@ -156,8 +201,8 @@ const getTableData = () => {
   const [col, row] = selectedRange.value
 
   const labels: string[] = []
-  const legends: string[] = []
-  const series: number[][] = []
+  let legends: string[] = []
+  let series: number[][] = []
 
   // 第一行为系列名，第一列为项目名，实际数据从第二行第二列开始
   for (let rowIndex = 1; rowIndex < row; rowIndex++) {
@@ -186,7 +231,27 @@ const getTableData = () => {
     series.push(seriesItem)
   }
 
-  emit('save', { labels, legends, series })
+  // 一些特殊图表类型，数据需要单独处理
+  // 散点图有且只有两列数据
+  if (chartType.value === 'scatter') {
+    if (legends.length > 2) {
+      legends = legends.slice(0, 2)
+      series = series.slice(0, 2)
+    }
+    if (legends.length < 2) {
+      legends.push('Y')
+      series.push(series[0])
+    }
+  }
+  // 饼图和环形图只有一列数据
+  if (chartType.value === 'ring' || chartType.value === 'pie') {
+    if (legends.length > 1) {
+      legends = legends.slice(0, 1)
+      series = series.slice(0, 1)
+    }
+  }
+
+  emit('save', { data: { labels, legends, series }, type: chartType.value })
 }
 
 // 清空表格数据
@@ -296,13 +361,15 @@ const changeSelectRange = (e: MouseEvent) => {
   position: relative;
   border-right: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
+  padding-left: 30px;
+  padding-top: 20px;
 
   @include overflow-overlay();
 }
 .range-box {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 20px;
+  left: 30px;
   z-index: 100;
   user-select: none;
 }
@@ -377,7 +444,7 @@ table {
     height: 32px;
 
     &.head {
-      background-color: rgba($color: $themeColor, $alpha: .1);
+      background-color: rgba($color: $themeColor, $alpha: .08);
     }
   }
   .item {
@@ -385,18 +452,99 @@ table {
     height: 100%;
     border: 0;
     outline: 0;
+    padding: 0;
     font-size: 13px;
     text-align: center;
     background-color: transparent;
-
-    &.selected {
-      background-color: rgba($color: $themeColor, $alpha: .02);
-    }
   }
 }
 .btns {
   margin-top: 10px;
   display: flex;
   justify-content: space-between;
+
+  .btn {
+    margin-left: 10px;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+
+    .change {
+      color: #ccc;
+      margin-left: 5px;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.col-header {
+  width: auto;
+  height: 20px;
+  position: absolute;
+  top: 0;
+  left: 30px;
+  display: flex;
+  border: 1px solid #ccc;
+  border-bottom: 0;
+  border-right: 0;
+  background-color: $lightGray;
+}
+.col-header-item {
+  width: 100px;
+  position: relative;
+  border-right: 1px solid #ccc;
+}
+.col-key {
+  font-size: 10px;
+  text-align: center;
+  line-height: 20px;
+}
+.row-header {
+  height: auto;
+  width: 30px;
+  position: absolute;
+  top: 20px;
+  left: 0;
+  border: 1px solid #ccc;
+  border-bottom: 0;
+  border-right: 0;
+  background-color: $lightGray;
+}
+.row-header-item {
+  height: 32px;
+  position: relative;
+  border-bottom: 1px solid #ccc;
+}
+.row-key {
+  height: 100%;
+  font-size: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.all-header {
+  width: 30px;
+  height: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid #ccc;
+  border-bottom: 0;
+  border-right: 0;
+  background-color: $lightGray;
+
+  .triangle {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+  }
 }
 </style>

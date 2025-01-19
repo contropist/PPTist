@@ -21,27 +21,21 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, PropType, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store'
-import { PPTElement } from '@/types/slides'
+import type { PPTElement } from '@/types/slides'
 import { getElementListRange } from '@/utils/element'
-import { OperateResizeHandlers, MultiSelectRange } from '@/types/edit'
+import type { OperateResizeHandlers, MultiSelectRange } from '@/types/edit'
 import useCommonOperate from '../hooks/useCommonOperate'
 
 import ResizeHandler from './ResizeHandler.vue'
 import BorderLine from './BorderLine.vue'
 
-const props = defineProps({
-  elementList: {
-    type: Array as PropType<PPTElement[]>,
-    required: true,
-  },
-  scaleMultiElement: {
-    type: Function as PropType<(e: MouseEvent, range: MultiSelectRange, command: OperateResizeHandlers) => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementList: PPTElement[]
+  scaleMultiElement: (e: MouseEvent, range: MultiSelectRange, command: OperateResizeHandlers) => void
+}>()
 
 const { activeElementIdList, canvasScale } = storeToRefs(useMainStore())
 

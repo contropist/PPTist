@@ -1,5 +1,6 @@
 <template>
   <div class="base-element-chart"
+    :class="{ 'is-thumbnail': target === 'thumbnail' }"
     :style="{
       top: elementInfo.top + 'px',
       left: elementInfo.left + 'px',
@@ -23,16 +24,13 @@
           :outline="elementInfo.outline"
         />
         <Chart
-          :width="elementInfo.width * zoom"
-          :height="elementInfo.height * zoom"
+          :width="elementInfo.width"
+          :height="elementInfo.height"
           :type="elementInfo.chartType"
           :data="elementInfo.data"
+          :themeColors="elementInfo.themeColors"
+          :textColor="elementInfo.textColor"
           :options="elementInfo.options"
-          :themeColor="elementInfo.themeColor"
-          :gridColor="elementInfo.gridColor"
-          :legends="elementInfo.data.legends"
-          :legend="elementInfo.legend || ''"
-          :style="{ zoom: 1 / zoom }"
         />
       </div>
     </div>
@@ -40,29 +38,24 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, inject, PropType, ref } from 'vue'
-import { PPTChartElement } from '@/types/slides'
-import { injectKeySlideScale } from '@/types/injectKey'
+import type { PPTChartElement } from '@/types/slides'
 
 import ElementOutline from '@/views/components/element/ElementOutline.vue'
 import Chart from './Chart.vue'
 
-defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTChartElement>,
-    required: true,
-  },
-})
-
-const slideScale = inject(injectKeySlideScale) || ref(1)
-
-const needScaleSize = computed(() => slideScale.value < 1)
-const zoom = computed(() => needScaleSize.value ? 1 / slideScale.value : 1)
+defineProps<{
+  elementInfo: PPTChartElement
+  target?: string
+}>()
 </script>
 
 <style lang="scss" scoped>
 .base-element-chart {
   position: absolute;
+
+  &.is-thumbnail {
+    pointer-events: none;
+  }
 }
 .rotate-wrapper {
   width: 100%;

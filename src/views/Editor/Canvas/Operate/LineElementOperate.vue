@@ -40,28 +40,19 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useMainStore } from '@/store'
-import { PPTLineElement } from '@/types/slides'
+import type { PPTLineElement } from '@/types/slides'
 import { OperateLineHandlers } from '@/types/edit'
 
 import ResizeHandler from './ResizeHandler.vue'
 
-const props = defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTLineElement>,
-    required: true,
-  },
-  handlerVisible: {
-    type: Boolean,
-    required: true,
-  },
-  dragLineElement: {
-    type: Function as PropType<(e: MouseEvent, element: PPTLineElement, command: OperateLineHandlers) => void>,
-    required: true,
-  },
-})
+const props = defineProps<{
+  elementInfo: PPTLineElement
+  handlerVisible: boolean
+  dragLineElement: (e: MouseEvent, element: PPTLineElement, command: OperateLineHandlers) => void
+}>()
 
 const { canvasScale } = storeToRefs(useMainStore())
 
@@ -86,8 +77,8 @@ const resizeHandlers = computed(() => {
     },
   ]
 
-  if (props.elementInfo.curve || props.elementInfo.broken) {
-    const ctrlHandler = (props.elementInfo.curve || props.elementInfo.broken) as [number, number]
+  if (props.elementInfo.curve || props.elementInfo.broken || props.elementInfo.broken2) {
+    const ctrlHandler = (props.elementInfo.curve || props.elementInfo.broken || props.elementInfo.broken2) as [number, number]
 
     handlers.push({
       handler: OperateLineHandlers.C,

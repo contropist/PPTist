@@ -11,10 +11,19 @@
         class="ruler-marker-100" 
         :class="{ 'hide': markerSize < 36, 'omit': markerSize < 72 }"
         v-for="marker in 20" 
-        :key="`marker-100-${marker}`"
+        :key="`h-marker-100-${marker}`"
+        :style="{ width: markerSize + 'px' }"
       >
-        <span>{{marker}}</span>
+        <span v-if="marker * 100 <= viewportSize">{{ marker * 100 }}</span>
       </div>
+
+      <div class="range" 
+        v-if="elementListRange"
+        :style="{
+          left: elementListRange.minX * canvasScale + 'px',
+          width: (elementListRange.maxX - elementListRange.minX) * canvasScale + 'px',
+        }"
+      ></div>
     </div>
     <div 
       class="v"
@@ -27,19 +36,29 @@
         class="ruler-marker-100" 
         :class="{ 'hide': markerSize < 36, 'omit': markerSize < 72 }"
         v-for="marker in 20" 
-        :key="marker" 
+        :key="`v-marker-100-${marker}`"
         :style="{ height: markerSize + 'px' }"
       >
-        <span>{{marker}}</span>
+        <span v-if="marker * 100 <= viewportSize * viewportRatio">{{ marker * 100 }}</span>
       </div>
+
+      <div class="range" 
+        v-if="elementListRange"
+        :style="{
+          top: elementListRange.minY * canvasScale + 'px',
+          height: (elementListRange.maxY - elementListRange.minY) * canvasScale + 'px',
+        }"
+      ></div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, PropType } from 'vue'
+import { watchEffect, computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMainStore } from '@/store'
+import { useMainStore, useSlidesStore } from '@/store'
+import { getElementListRange } from '@/utils/element'
+import type { PPTElement } from '@/types/slides'
 
 interface ViewportStyles {
   top: number
@@ -48,17 +67,24 @@ interface ViewportStyles {
   height: number
 }
 
-const props = defineProps({
-  viewportStyles: {
-    type: Object as PropType<ViewportStyles>,
-    required: true,
-  },
+const props = defineProps<{
+  viewportStyles: ViewportStyles
+  elementList: PPTElement[]
+}>()
+
+const { canvasScale, activeElementIdList } = storeToRefs(useMainStore())
+const { viewportRatio, viewportSize } = storeToRefs(useSlidesStore())
+
+const elementListRange = ref<null | ReturnType<typeof getElementListRange>>(null)
+
+watchEffect(() => {
+  const els = props.elementList.filter(el => activeElementIdList.value.includes(el.id))
+  if (!els.length) return elementListRange.value = null
+  elementListRange.value = getElementListRange(els)
 })
 
-const { canvasScale } = storeToRefs(useMainStore())
-
 const markerSize = computed(() => {
-  return props.viewportStyles.width * canvasScale.value / 10
+  return props.viewportStyles.width * canvasScale.value / (viewportSize.value / 100)
 })
 </script>
 
@@ -78,9 +104,15 @@ const markerSize = computed(() => {
   align-items: center;
   overflow: hidden;
 
+  .range {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: $themeColor, $alpha: .1);
+  }
+
   .ruler-marker-100 {
     height: 100%;
-    width: 10%;
     line-height: 20px;
     text-align: right;
     flex-shrink: 0;
@@ -121,6 +153,13 @@ const markerSize = computed(() => {
   width: 20px;
   left: 5px;
   overflow: hidden;
+
+  .range {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background-color: rgba($color: $themeColor, $alpha: .1);
+  }
 
   .ruler-marker-100 {
     width: 100%;

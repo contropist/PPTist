@@ -11,7 +11,7 @@
       class="rotate-wrapper"
       :style="{ transform: `rotate(${elementInfo.rotate}deg)` }"
     >
-      <div class="element-content" :style="{ backgroundImage: `url(${elementInfo.poster})` }">
+      <div class="element-content" :style="{ backgroundImage: elementInfo.poster ? `url(${elementInfo.poster})` : '' }">
         <IconPlayOne class="icon" />
       </div>
     </div>
@@ -19,15 +19,11 @@
 </template>
 
 <script lang="ts" setup>
-import { PropType } from 'vue'
-import { PPTVideoElement } from '@/types/slides'
+import type { PPTVideoElement } from '@/types/slides'
 
-defineProps({
-  elementInfo: {
-    type: Object as PropType<PPTVideoElement>,
-    required: true,
-  },
-})
+defineProps<{
+  elementInfo: PPTVideoElement
+}>()
 </script>
 
 <style lang="scss" scoped>

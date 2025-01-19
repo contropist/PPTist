@@ -1,11 +1,9 @@
 import { customAlphabet } from 'nanoid'
 import { defineStore } from 'pinia'
-import { CreatingElement, TextFormatPainter } from '@/types/edit'
 import { ToolbarStates } from '@/types/toolbar'
-import { DialogForExportTypes } from '@/types/export'
-import { SYS_FONTS } from '@/configs/font'
-import { TextAttrs, defaultRichTextAttrs } from '@/utils/prosemirror/utils'
-import { isSupportFont } from '@/utils/font'
+import type { CreatingElement, ShapeFormatPainter, TextFormatPainter } from '@/types/edit'
+import type { DialogForExportTypes } from '@/types/export'
+import { type TextAttrs, defaultRichTextAttrs } from '@/utils/prosemirror/utils'
 
 import { useSlidesStore } from './slides'
 
@@ -23,7 +21,7 @@ export interface MainState {
   gridLineSize: number
   showRuler: boolean
   creatingElement: CreatingElement | null
-  availableFonts: typeof SYS_FONTS
+  creatingCustomShape: boolean
   toolbarState: ToolbarStates
   clipingImageElementId: string
   isScaling: boolean
@@ -33,7 +31,12 @@ export interface MainState {
   dialogForExport: DialogForExportTypes
   databaseId: string
   textFormatPainter: TextFormatPainter | null
+  shapeFormatPainter: ShapeFormatPainter | null
   showSelectPanel: boolean
+  showSearchPanel: boolean
+  showNotesPanel: boolean
+  showMarkupPanel: boolean
+  showAIPPTDialog: boolean
 }
 
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
@@ -46,7 +49,7 @@ export const useMainStore = defineStore('main', {
     activeGroupElementId: '', // 组合元素成员中，被选中可独立操作的元素ID
     hiddenElementIdList: [], // 被隐藏的元素ID集合
     canvasPercentage: 90, // 画布可视区域百分比
-    canvasScale: 1, // 画布缩放比例（基于宽度1000px）
+    canvasScale: 1, // 画布缩放比例（基于宽度{{slidesStore.viewportSize}}像素）
     canvasDragged: false, // 画布被拖拽移动
     thumbnailsFocus: false, // 左侧导航缩略图区域聚焦
     editorAreaFocus: false, //  编辑区域聚焦
@@ -54,7 +57,7 @@ export const useMainStore = defineStore('main', {
     gridLineSize: 0, // 网格线尺寸（0表示不显示网格线）
     showRuler: false, // 显示标尺
     creatingElement: null, // 正在插入的元素信息，需要通过绘制插入的元素（文字、形状、线条）
-    availableFonts: SYS_FONTS, // 当前环境可用字体
+    creatingCustomShape: false, // 正在绘制任意多边形
     toolbarState: ToolbarStates.SLIDE_DESIGN, // 右侧工具栏状态
     clipingImageElementId: '', // 当前正在裁剪的图片ID  
     richTextAttrs: defaultRichTextAttrs, // 富文本状态
@@ -64,7 +67,12 @@ export const useMainStore = defineStore('main', {
     dialogForExport: '', // 导出面板
     databaseId, // 标识当前应用的indexedDB数据库ID
     textFormatPainter: null, // 文字格式刷
+    shapeFormatPainter: null, // 形状格式刷
     showSelectPanel: false, // 打开选择面板
+    showSearchPanel: false, // 打开查找替换面板
+    showNotesPanel: false, // 打开批注面板
+    showMarkupPanel: false, // 打开类型标注面板
+    showAIPPTDialog: false, // 打开AIPPT创建窗口
   }),
 
   getters: {
@@ -139,8 +147,8 @@ export const useMainStore = defineStore('main', {
       this.creatingElement = element
     },
   
-    setAvailableFonts() {
-      this.availableFonts = SYS_FONTS.filter(font => isSupportFont(font.value))
+    setCreatingCustomShapeState(state: boolean) {
+      this.creatingCustomShape = state
     },
   
     setToolbarState(toolbarState: ToolbarStates) {
@@ -175,8 +183,28 @@ export const useMainStore = defineStore('main', {
       this.textFormatPainter = textFormatPainter
     },
 
+    setShapeFormatPainter(shapeFormatPainter: ShapeFormatPainter | null) {
+      this.shapeFormatPainter = shapeFormatPainter
+    },
+
     setSelectPanelState(show: boolean) {
       this.showSelectPanel = show
+    },
+
+    setSearchPanelState(show: boolean) {
+      this.showSearchPanel = show
+    },
+
+    setNotesPanelState(show: boolean) {
+      this.showNotesPanel = show
+    },
+
+    setMarkupPanelState(show: boolean) {
+      this.showMarkupPanel = show
+    },
+
+    setAIPPTDialogState(show: boolean) {
+      this.showAIPPTDialog = show
     },
   },
 })

@@ -8,12 +8,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Clear npm cache
+        run: npm cache clean --force
 
-      - name: Use Node.js v14.x
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js v18
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 18
 
       - name: Install and Build
         run: |
